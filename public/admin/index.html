@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kritiva Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+:root{--bg:#0a0705;--panel:#120d09;--gold:#d4af37;--gold-l:#f4e4bc;--line:rgba(212,175,55,0.2);--ink:#f0ece2;--dim:#9c9483;--danger:#c0392b;--ok:#2e8b57}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',Arial,sans-serif;min-height:100vh}
+.hidden{display:none !important}
+
+/* Login */
+#loginView{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.login-box{background:var(--panel);border:1px solid var(--line);padding:44px;border-radius:8px;width:100%;max-width:360px}
+.login-box h1{font-size:20px;color:var(--gold-l);margin:0 0 4px 0;letter-spacing:.05em}
+.login-box p{color:var(--dim);font-size:12px;margin:0 0 24px 0}
+.field{margin-bottom:16px}
+label{display:block;font-size:12px;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em}
+input,select,textarea,button{font-family:inherit}
+input,select,textarea{width:100%;padding:11px 13px;background:#1a1410;border:1px solid var(--line);color:var(--ink);border-radius:4px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+.btn{cursor:pointer;border:none;padding:11px 20px;border-radius:4px;font-size:13px;letter-spacing:.05em;text-transform:uppercase}
+.btn-gold{background:linear-gradient(135deg,var(--gold-l),var(--gold) 70%);color:#1a1206;font-weight:600;width:100%}
+.btn-outline{background:transparent;border:1px solid var(--gold);color:var(--gold-l)}
+.btn-sm{padding:6px 12px;font-size:11px}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-ok{background:var(--ok);color:#fff}
+#loginError{color:#e57373;font-size:12px;margin-top:10px;min-height:16px}
+
+/* Dashboard shell */
+#dashView{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--panel);border-right:1px solid var(--line);padding:24px 0;flex:none}
+.sidebar h2{font-size:16px;color:var(--gold-l);padding:0 24px;margin:0 0 30px 0;letter-spacing:.05em}
+.sidebar .who{padding:0 24px;color:var(--dim);font-size:11px;margin-bottom:24px}
+.navitem{padding:12px 24px;color:var(--dim);cursor:pointer;font-size:14px;border-left:3px solid transparent}
+.navitem.active{color:var(--gold-l);border-left-color:var(--gold);background:rgba(212,175,55,0.06)}
+.navitem:hover{color:var(--ink)}
+.logout{margin-top:30px;padding:0 24px}
+main{flex:1;padding:36px;overflow-x:auto}
+h1.page-title{font-size:22px;color:var(--gold-l);margin:0 0 24px 0}
+
+/* Stat cards */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:30px}
+.stat-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px}
+.stat-card .n{font-size:28px;color:var(--gold);font-weight:600}
+.stat-card .l{font-size:12px;color:var(--dim);margin-top:4px;text-transform:uppercase;letter-spacing:.05em}
+
+/* Table */
+table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+th,td{padding:12px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--line)}
+th{color:var(--gold);text-transform:uppercase;font-size:11px;letter-spacing:.05em;background:rgba(212,175,55,0.05)}
+tr:last-child td{border-bottom:none}
+.status-pill{padding:3px 10px;border-radius:20px;font-size:11px;text-transform:uppercase}
+.status-pending{background:#4a3c1a;color:#e0c060}
+.status-confirmed{background:#1a4a2a;color:#6fd18a}
+.status-cancelled{background:#4a1a1a;color:#e08080}
+.filters{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.filters input,.filters select{width:auto;min-width:160px}
+.row-actions{display:flex;gap:6px;flex-wrap:wrap}
+
+/* Banners grid */
+.banner-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:20px}
+.banner-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.banner-card img{width:100%;height:120px;object-fit:cover;display:block}
+.banner-card .body{padding:12px}
+.banner-card .body p{font-size:12px;color:var(--dim);margin:4px 0}
+.size-guide{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-top:16px;font-size:12px;color:var(--dim)}
+.size-guide b{color:var(--gold-l)}
+
+.upload-box{background:var(--panel);border:1px dashed var(--line);border-radius:8px;padding:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:end}
+
+.mail-box{max-width:640px}
+.mail-box .field{margin-bottom:16px}
+#mailStatus,#uploadStatus{font-size:12px;color:var(--gold-l);margin-top:10px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginView">
+  <div class="login-box">
+    <h1>Kritiva Admin</h1>
+    <p>Authorized personnel only</p>
+    <form id="loginForm">
+      <div class="field"><label>Username</label><input type="text" id="loginUser" required></div>
+      <div class="field"><label>Password</label><input type="password" id="loginPass" required></div>
+      <button class="btn btn-gold" type="submit">Sign In</button>
+      <div id="loginError"></div>
+    </form>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashView" class="hidden">
+  <div class="sidebar">
+    <h2>KRITIVA ADMIN</h2>
+    <div class="who" id="whoami"></div>
+    <div class="navitem active" data-view="overview">Overview</div>
+    <div class="navitem" data-view="bookings">Bookings</div>
+    <div class="navitem" data-view="banners">Banners</div>
+    <div class="navitem" data-view="mail">Send Mail</div>
+    <div class="logout"><button class="btn btn-outline" id="logoutBtn" style="width:100%">Log Out</button></div>
+  </div>
+
+  <main>
+    <!-- OVERVIEW -->
+    <section id="view-overview">
+      <h1 class="page-title">Overview</h1>
+      <div class="stats-row">
+        <div class="stat-card"><div class="n" id="s-total">-</div><div class="l">Total Enquiries</div></div>
+        <div class="stat-card"><div class="n" id="s-pending">-</div><div class="l">Pending</div></div>
+        <div class="stat-card"><div class="n" id="s-confirmed">-</div><div class="l">Confirmed</div></div>
+        <div class="stat-card"><div class="n" id="s-revenue">-</div><div class="l">Confirmed Revenue</div></div>
+      </div>
+    </section>
+
+    <!-- BOOKINGS -->
+    <section id="view-bookings" class="hidden">
+      <h1 class="page-title">Bookings</h1>
+      <div class="filters">
+        <input type="text" id="searchQ" placeholder="Search name / phone / email">
+        <select id="filterStatus"><option value="">All Status</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="cancelled">Cancelled</option></select>
+        <button class="btn btn-outline btn-sm" id="applyFilters">Filter</button>
+      </div>
+      <table>
+        <thead><tr><th>Name</th><th>Phone</th><th>Plan</th><th>Passes</th><th>Day</th><th>Status</th><th>Amount</th><th>Actions</th></tr></thead>
+        <tbody id="bookingsBody"></tbody>
+      </table>
+    </section>
+
+    <!-- BANNERS -->
+    <section id="view-banners" class="hidden">
+      <h1 class="page-title">Banners</h1>
+      <div class="upload-box">
+        <div class="field"><label>Title</label><input type="text" id="bannerTitle" placeholder="e.g. Early Bird Offer"></div>
+        <div class="field"><label>Placement</label>
+          <select id="bannerPlacement"><option value="promo-section">Homepage Promo Section</option></select>
+        </div>
+        <div class="field"><label>Image File</label><input type="file" id="bannerFile" accept="image/*"></div>
+        <button class="btn btn-gold" id="uploadBannerBtn" style="grid-column:1/-1">Upload Banner</button>
+        <div id="uploadStatus" style="grid-column:1/-1"></div>
+      </div>
+      <div class="size-guide">
+        <b>Suggested banner sizes:</b><br>
+        Homepage promo strip: <b>1600 x 600px</b> (JPG/PNG, under 500KB, landscape)<br>
+        Keep text within the center 80% to avoid cropping on mobile.
+      </div>
+      <div class="banner-grid" id="bannerGrid"></div>
+    </section>
+
+    <!-- MAIL -->
+    <section id="view-mail" class="hidden">
+      <h1 class="page-title">Send Mail</h1>
+      <div class="mail-box">
+        <div class="field"><label>To (email)</label><input type="email" id="mailTo" required></div>
+        <div class="field"><label>Subject</label><input type="text" id="mailSubject" required></div>
+        <div class="field"><label>Heading (large title inside email)</label><input type="text" id="mailHeading"></div>
+        <div class="field"><label>Body (one line = one paragraph)</label><textarea id="mailBody" rows="6"></textarea></div>
+        <div class="field"><label>Button Text (optional)</label><input type="text" id="mailCtaText" placeholder="e.g. View Details"></div>
+        <div class="field"><label>Button Link (optional)</label><input type="text" id="mailCtaUrl" placeholder="https://..."></div>
+        <div class="field"><label>Banner Image URL (optional, from Banners tab)</label><input type="text" id="mailBannerUrl" placeholder="https://yourdomain.com/uploads/banners/xxx.jpg"></div>
+        <button class="btn btn-gold" id="sendMailBtn">Send Email</button>
+        <div id="mailStatus"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const API = window.location.origin.includes('localhost') ? 'http://localhost:5000' : window.location.origin;
+let TOKEN = localStorage.getItem('kp_token') || '';
+
+function authHeaders(){ return { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type':'application/json' }; }
+
+function showDash(){
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('dashView').classList.remove('hidden');
+  document.getElementById('whoami').textContent = localStorage.getItem('kp_user') || '';
+  loadOverview(); loadBookings(); loadBanners();
+}
+function showLogin(){
+  document.getElementById('dashView').classList.add('hidden');
+  document.getElementById('loginView').classList.remove('hidden');
+}
+
+if(TOKEN) showDash(); else showLogin();
+
+document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const username = document.getElementById('loginUser').value;
+  const password = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  try{
+    const res = await fetch(`${API}/api/admin/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username,password}) });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Login failed');
+    TOKEN = data.token;
+    localStorage.setItem('kp_token', TOKEN);
+    localStorage.setItem('kp_user', `${data.admin.username} (${data.admin.role})`);
+    showDash();
+  }catch(err){ errEl.textContent = err.message; }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  localStorage.removeItem('kp_token'); localStorage.removeItem('kp_user'); TOKEN=''; showLogin();
+});
+
+/* Nav */
+document.querySelectorAll('.navitem').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.navitem').forEach(i=>i.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
+    document.getElementById('view-'+item.dataset.view).classList.remove('hidden');
+  });
+});
+
+/* Overview */
+async function loadOverview(){
+  const res = await fetch(`${API}/api/admin/stats`, { headers: authHeaders() });
+  if(res.status===401) return showLogin();
+  const d = await res.json();
+  document.getElementById('s-total').textContent = d.total;
+  document.getElementById('s-pending').textContent = d.pending;
+  document.getElementById('s-confirmed').textContent = d.confirmed;
+  document.getElementById('s-revenue').textContent = '₹'+ (d.confirmedRevenue||0).toLocaleString('en-IN');
+}
+
+/* Bookings */
+async function loadBookings(){
+  const q = document.getElementById('searchQ').value;
+  const status = document.getElementById('filterStatus').value;
+  const params = new URLSearchParams();
+  if(q) params.set('q', q);
+  if(status) params.set('status', status);
+  const res = await fetch(`${API}/api/admin/bookings?${params}`, { headers: authHeaders() });
+  if(res.status===401) return showLogin();
+  const rows = await res.json();
+  const body = document.getElementById('bookingsBody');
+  body.innerHTML = rows.map(b => `
+    <tr>
+      <td>${b.name}</td>
+      <td>${b.phone}</td>
+      <td>${b.planType}</td>
+      <td>${b.passes||1}</td>
+      <td>${b.day||'-'}</td>
+      <td><span class="status-pill status-${b.status}">${b.status}</span></td>
+      <td>₹${(b.amount||0).toLocaleString('en-IN')}</td>
+      <td class="row-actions">
+        <select onchange="updateStatus('${b._id}',this.value)">
+          <option value="">Set Status</option>
+          <option value="pending" ${b.status==='pending'?'selected':''}>Pending</option>
+          <option value="confirmed" ${b.status==='confirmed'?'selected':''}>Confirmed</option>
+          <option value="cancelled" ${b.status==='cancelled'?'selected':''}>Cancelled</option>
+        </select>
+        <button class="btn btn-sm btn-outline" onclick="genInvoice('${b._id}')">Invoice</button>
+        <button class="btn btn-sm btn-danger" onclick="delBooking('${b._id}')">Delete</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--dim)">No bookings yet</td></tr>';
+}
+document.getElementById('applyFilters').addEventListener('click', loadBookings);
+
+async function updateStatus(id, status){
+  if(!status) return;
+  await fetch(`${API}/api/admin/bookings/${id}`, { method:'PATCH', headers: authHeaders(), body: JSON.stringify({status}) });
+  loadBookings(); loadOverview();
+}
+async function delBooking(id){
+  if(!confirm('Delete this booking permanently?')) return;
+  await fetch(`${API}/api/admin/bookings/${id}`, { method:'DELETE', headers: authHeaders() });
+  loadBookings(); loadOverview();
+}
+async function genInvoice(id){
+  const amount = prompt('Enter final invoice amount (INR):');
+  if(amount===null) return;
+  const sendEmail = confirm('Email this invoice to the customer now?');
+  const res = await fetch(`${API}/api/admin/bookings/${id}/invoice`, {
+    method:'POST', headers: authHeaders(), body: JSON.stringify({ amount: Number(amount), sendEmail })
+  });
+  const d = await res.json();
+  if(res.ok){
+    alert(`Invoice ${d.invoiceNumber} generated${d.emailed?' and emailed':''}.`);
+    window.open(`${API}${d.downloadUrl}`, '_blank');
+    loadBookings(); loadOverview();
+  } else { alert(d.error || 'Failed'); }
+}
+
+/* Banners */
+async function loadBanners(){
+  const res = await fetch(`${API}/api/admin/banners`, { headers: authHeaders() });
+  if(res.status===401) return;
+  const banners = await res.json();
+  document.getElementById('bannerGrid').innerHTML = banners.map(b => `
+    <div class="banner-card">
+      <img src="${API}${b.url}">
+      <div class="body">
+        <strong>${b.title||'Untitled'}</strong>
+        <p>${b.active ? '🟢 Active' : '⚪ Inactive'}</p>
+        <div class="row-actions">
+          ${b.active
+            ? `<button class="btn btn-sm btn-outline" onclick="toggleBanner('${b._id}',false)">Deactivate</button>`
+            : `<button class="btn btn-sm btn-ok" onclick="toggleBanner('${b._id}',true)">Activate</button>`}
+          <button class="btn btn-sm btn-danger" onclick="delBanner('${b._id}')">Delete</button>
+        </div>
+      </div>
+    </div>`).join('') || '<p style="color:var(--dim)">No banners uploaded yet</p>';
+}
+async function toggleBanner(id, activate){
+  await fetch(`${API}/api/admin/banners/${id}/${activate?'activate':'deactivate'}`, { method:'PATCH', headers: authHeaders() });
+  loadBanners();
+}
+async function delBanner(id){
+  if(!confirm('Delete this banner?')) return;
+  await fetch(`${API}/api/admin/banners/${id}`, { method:'DELETE', headers: authHeaders() });
+  loadBanners();
+}
+document.getElementById('uploadBannerBtn').addEventListener('click', async ()=>{
+  const fileInput = document.getElementById('bannerFile');
+  const statusEl = document.getElementById('uploadStatus');
+  if(!fileInput.files[0]){ statusEl.textContent='Choose a file first.'; return; }
+  const fd = new FormData();
+  fd.append('banner', fileInput.files[0]);
+  fd.append('title', document.getElementById('bannerTitle').value);
+  fd.append('placement', document.getElementById('bannerPlacement').value);
+  statusEl.textContent = 'Uploading...';
+  const res = await fetch(`${API}/api/admin/banners`, { method:'POST', headers:{ 'Authorization': `Bearer ${TOKEN}` }, body: fd });
+  if(res.ok){ statusEl.textContent='Uploaded.'; fileInput.value=''; loadBanners(); }
+  else { statusEl.textContent='Upload failed.'; }
+});
+
+/* Mail */
+document.getElementById('sendMailBtn').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('mailStatus');
+  const payload = {
+    to: document.getElementById('mailTo').value,
+    subject: document.getElementById('mailSubject').value,
+    heading: document.getElementById('mailHeading').value,
+    body: document.getElementById('mailBody').value,
+    ctaText: document.getElementById('mailCtaText').value,
+    ctaUrl: document.getElementById('mailCtaUrl').value,
+    bannerUrl: document.getElementById('mailBannerUrl').value
+  };
+  if(!payload.to || !payload.subject){ statusEl.textContent='To and Subject are required.'; return; }
+  statusEl.textContent = 'Sending...';
+  const res = await fetch(`${API}/api/admin/send-mail`, { method:'POST', headers: authHeaders(), body: JSON.stringify(payload) });
+  statusEl.textContent = res.ok ? 'Email sent.' : 'Failed to send.';
+});
+</script>
+</body>
+</html>
