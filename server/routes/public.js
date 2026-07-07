@@ -35,7 +35,7 @@ router.post('/bookings', async (req, res) => {
         `Plan: ${planType}`, `Passes: ${passes || 1}`, `Day: ${day || 'All 3 Days'}`,
         `Message: ${message || '-'}`
       ]
-    }).catch(()=>{});
+   }).catch(err => console.error('MAIL ERROR:', err.message));
 
     res.status(201).json({ ok: true, id: booking._id });
   } catch (err) {
