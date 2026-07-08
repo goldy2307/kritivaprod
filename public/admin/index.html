@@ -189,8 +189,10 @@ tr:last-child td{border-bottom:none}
     <div class="navitem" data-view="pricing">Pricing &amp; Sponsorship</div>
     <div class="navitem" data-view="coupons">Discount Coupons</div>
     <div class="navitem" data-view="banners">Banners</div>
+    <div class="navitem" data-view="events">Events</div>
     <div class="navitem" data-view="mail">Send Mail</div>
     <div class="navitem" data-view="users">Manage Users</div>
+    <div class="navitem" data-view="roles">Manage Roles</div>
     <div class="logout">
       <button class="btn btn-outline" id="changePassBtn" style="width:100%">Change Password</button>
       <button class="btn btn-outline" id="logoutBtn" style="width:100%">Log Out</button>
@@ -212,8 +214,10 @@ tr:last-child td{border-bottom:none}
         <div class="quick-card" data-goto="pricing"><div class="icon">₹</div><h4>Pricing &amp; Sponsorship</h4><p>Update pass &amp; sponsor prices</p></div>
         <div class="quick-card" data-goto="coupons"><div class="icon">🎟</div><h4>Discount Coupons</h4><p>Create and manage promo codes</p></div>
         <div class="quick-card" data-goto="banners"><div class="icon">🖼</div><h4>Banners</h4><p>Manage homepage promotions</p></div>
+        <div class="quick-card" data-goto="events"><div class="icon">📅</div><h4>Upcoming Events</h4><p>Add events shown on the homepage &amp; Reserve Now</p></div>
         <div class="quick-card" data-goto="mail"><div class="icon">✉</div><h4>Send Mail</h4><p>One-off branded emails to leads</p></div>
         <div class="quick-card" data-goto="users"><div class="icon">👤</div><h4>Manage Users</h4><p>Add staff, set roles &amp; permissions</p></div>
+        <div class="quick-card" data-goto="roles"><div class="icon">🛡</div><h4>Manage Roles</h4><p>Create custom roles &amp; permission sets</p></div>
       </div>
     </section>
 
@@ -298,6 +302,36 @@ tr:last-child td{border-bottom:none}
       <div class="banner-grid" id="bannerGrid"></div>
     </section>
 
+    <!-- EVENTS -->
+    <section id="view-events" class="hidden">
+      <h1 class="page-title">Upcoming Events</h1>
+      <p style="color:var(--dim);font-size:13px;margin-top:-14px">Events added here (with "Listed" on) appear in the homepage Upcoming Events section and become selectable on the Reserve Now form. Add packages (e.g. Family Pass, Gold Sponsor) only if the event has fixed pricing tiers — leave empty for a plain enquiry event.</p>
+      <div class="card-box">
+        <div class="upload-box" style="grid-template-columns:repeat(3,1fr)">
+          <div class="field"><label>Title</label><input type="text" id="evTitle" placeholder="e.g. Holi Celebration 2027"></div>
+          <div class="field"><label>Category</label><input type="text" id="evCategory" placeholder="e.g. Holi, Corporate Gala, Wedding"></div>
+          <div class="field"><label>Tagline</label><input type="text" id="evTagline" placeholder="Short one-liner"></div>
+          <div class="field"><label>Date Label</label><input type="text" id="evDateLabel" placeholder="e.g. 8 Mar 2027"></div>
+          <div class="field"><label>Location</label><input type="text" id="evLocation" placeholder="Venue, City"></div>
+          <div class="field"><label>Status</label>
+            <select id="evStatus"><option value="upcoming">Upcoming</option><option value="past">Past</option><option value="draft">Draft</option></select>
+          </div>
+          <div class="field"><label>Listed on site?</label>
+            <select id="evListed"><option value="true">Yes — show on site</option><option value="false">No — hidden</option></select>
+          </div>
+          <div class="field"><label>Cover Image</label><input type="file" id="evImage" accept="image/*"></div>
+          <div class="field full"><label>Description</label><textarea id="evDescription" rows="2" placeholder="Longer description shown on request"></textarea></div>
+        </div>
+        <h4 style="color:var(--gold-l)">Packages (optional)</h4>
+        <div id="evPackagesRows"></div>
+        <button class="btn btn-outline btn-sm" id="addPackageRowBtn" type="button" style="width:auto;margin-bottom:14px">+ Add Package</button>
+        <br>
+        <button class="btn btn-gold" id="addEventBtn" style="width:auto">Add Event</button>
+        <div id="eventStatus"></div>
+      </div>
+      <div class="banner-grid" id="eventsAdminGrid" style="margin-top:20px"></div>
+    </section>
+
     <!-- MAIL -->
     <section id="view-mail" class="hidden">
       <h1 class="page-title">Send Mail</h1>
@@ -331,7 +365,7 @@ tr:last-child td{border-bottom:none}
           <div class="field"><label>Profile Image</label><input type="file" id="uProfileImage" accept="image/*"></div>
           <div class="field">
             <label>Role</label>
-            <select id="uRole"><option value="back-office">Back Office</option><option value="admin">Admin (full access)</option></select>
+            <select id="uRole"><option value="admin">Admin (full access)</option></select>
           </div>
         </div>
         <div class="field" id="uPermsWrap">
@@ -347,6 +381,29 @@ tr:last-child td{border-bottom:none}
         <tbody id="usersBody"></tbody>
       </table>
     </section>
+
+    <!-- ROLES -->
+    <section id="view-roles" class="hidden">
+      <h1 class="page-title">Manage Roles</h1>
+      <p style="color:var(--dim);font-size:13px;margin-top:-14px">Create roles once here, then assign them to employees under Manage Users. The built-in "admin" role always has full access and isn't listed here.</p>
+      <div class="card-box">
+        <h4 style="margin-top:0;color:var(--gold-l)">Add Role</h4>
+        <div class="upload-box" style="grid-template-columns:repeat(2,1fr)">
+          <div class="field"><label>Role Key (no spaces)</label><input type="text" id="rName" placeholder="e.g. event-manager"></div>
+          <div class="field"><label>Display Label</label><input type="text" id="rLabel" placeholder="e.g. Event Manager"></div>
+        </div>
+        <div class="field">
+          <label>Permissions</label>
+          <div class="checkbox-grid" id="rPermsGrid"></div>
+        </div>
+        <button class="btn btn-gold" id="addRoleBtn" style="width:auto">Add Role</button>
+        <div id="roleStatus"></div>
+      </div>
+      <table style="margin-top:20px">
+        <thead><tr><th>Key</th><th>Label</th><th>Permissions</th><th>Actions</th></tr></thead>
+        <tbody id="rolesBody"></tbody>
+      </table>
+    </section>
   </main>
 </div>
 
@@ -355,7 +412,7 @@ const API = window.location.origin.includes('localhost') ? 'http://localhost:500
 let TOKEN = localStorage.getItem('kp_token') || '';
 let CAPTCHA_ID = '';
 const ALL_PLANS = ['Family Pass','Silver Sponsor','Gold Sponsor','Title Sponsor','Stall/Vendor'];
-const ALL_PERMISSIONS = ['bookings','banners','pricing','coupons','mail','users'];
+const ALL_PERMISSIONS = ['bookings','banners','pricing','coupons','mail','users','events','roles'];
 
 function authHeaders(json=true){
   const h = { 'Authorization': `Bearer ${TOKEN}` };
@@ -378,7 +435,7 @@ function showDash(){
   document.getElementById('loginView').classList.add('hidden');
   document.getElementById('dashView').classList.remove('hidden');
   document.getElementById('whoami').textContent = localStorage.getItem('kp_user') || '';
-  loadOverview(); loadBookings(); loadPricingForm(); loadCoupons(); loadBanners(); loadUsers();
+  loadOverview(); loadBookings(); loadPricingForm(); loadCoupons(); loadBanners(); loadEventsAdmin(); loadUsers(); loadRoles();
 }
 function showLogin(){
   document.getElementById('dashView').classList.add('hidden');
@@ -741,6 +798,138 @@ document.getElementById('sendMailBtn').addEventListener('click', async ()=>{
   const res = await fetch(`${API}/api/admin/send-mail`, { method:'POST', headers: authHeaders(), body: JSON.stringify(payload) });
   statusEl.textContent = res.ok ? 'Email sent.' : 'Failed to send.';
 });
+
+/* ---------- events ---------- */
+function packageRowHtml(pkg){
+  pkg = pkg || {name:'',price:0,passes:1};
+  return `<div class="price-grid pkg-row">
+    <input type="text" class="pkg-name" placeholder="Package name (e.g. Family Pass)" value="${pkg.name||''}">
+    <input type="number" class="pkg-price" placeholder="Price" value="${pkg.price||0}">
+    <input type="number" class="pkg-passes" placeholder="Passes" value="${pkg.passes||1}">
+    <button class="btn btn-sm btn-danger" type="button" onclick="this.closest('.pkg-row').remove()">✕</button>
+  </div>`;
+}
+document.getElementById('addPackageRowBtn').addEventListener('click', ()=>{
+  document.getElementById('evPackagesRows').insertAdjacentHTML('beforeend', packageRowHtml());
+});
+function collectPackages(){
+  return Array.from(document.querySelectorAll('.pkg-row')).map(row=>({
+    name: row.querySelector('.pkg-name').value,
+    price: Number(row.querySelector('.pkg-price').value)||0,
+    passes: Number(row.querySelector('.pkg-passes').value)||1
+  })).filter(p=>p.name);
+}
+
+async function loadEventsAdmin(){
+  const res = await fetch(`${API}/api/admin/events`, { headers: authHeaders() });
+  if(res.status===401) return;
+  const events = await res.json();
+  document.getElementById('eventsAdminGrid').innerHTML = events.map(ev => `
+    <div class="banner-card">
+      ${ev.image ? `<img src="${API}${ev.image}">` : ''}
+      <div class="body">
+        <strong>${ev.title}</strong>
+        <p>${ev.category||'-'} · ${ev.status}</p>
+        <p>${ev.dateLabel||''} ${ev.location?'· '+ev.location:''}</p>
+        <p>${ev.listed ? '🟢 Listed on site' : '⚪ Hidden'}</p>
+        <p>${(ev.packages||[]).length} package(s)</p>
+        <div class="row-actions">
+          ${ev.listed
+            ? `<button class="btn btn-sm btn-outline" onclick="toggleEventListed('${ev._id}',false)">Hide</button>`
+            : `<button class="btn btn-sm btn-ok" onclick="toggleEventListed('${ev._id}',true)">List</button>`}
+          <button class="btn btn-sm btn-danger" onclick="delEvent('${ev._id}')">Delete</button>
+        </div>
+      </div>
+    </div>`).join('') || '<p style="color:var(--dim)">No events yet — add one above.</p>';
+}
+async function toggleEventListed(id, listed){
+  const fd = new FormData(); fd.append('listed', listed);
+  await fetch(`${API}/api/admin/events/${id}`, { method:'PATCH', headers: authHeaders(false), body: fd });
+  loadEventsAdmin();
+}
+async function delEvent(id){
+  if(!confirm('Delete this event permanently? Past bookings keep their event name on record.')) return;
+  await fetch(`${API}/api/admin/events/${id}`, { method:'DELETE', headers: authHeaders() });
+  loadEventsAdmin();
+}
+document.getElementById('addEventBtn').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('eventStatus');
+  const title = document.getElementById('evTitle').value;
+  if(!title){ statusEl.textContent = 'Title required.'; return; }
+  const fd = new FormData();
+  fd.append('title', title);
+  fd.append('category', document.getElementById('evCategory').value);
+  fd.append('tagline', document.getElementById('evTagline').value);
+  fd.append('dateLabel', document.getElementById('evDateLabel').value);
+  fd.append('location', document.getElementById('evLocation').value);
+  fd.append('status', document.getElementById('evStatus').value);
+  fd.append('listed', document.getElementById('evListed').value);
+  fd.append('description', document.getElementById('evDescription').value);
+  fd.append('packages', JSON.stringify(collectPackages()));
+  const fileInput = document.getElementById('evImage');
+  if(fileInput.files[0]) fd.append('image', fileInput.files[0]);
+  statusEl.textContent = 'Saving...';
+  const res = await fetch(`${API}/api/admin/events`, { method:'POST', headers: authHeaders(false), body: fd });
+  const d = await res.json();
+  statusEl.textContent = res.ok ? 'Event added.' : (d.error || 'Failed');
+  if(res.ok){
+    ['evTitle','evCategory','evTagline','evDateLabel','evLocation','evDescription'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('evPackagesRows').innerHTML=''; fileInput.value='';
+    loadEventsAdmin();
+  }
+});
+
+/* ---------- roles ---------- */
+let ROLES = [];
+function buildRolePermsGrid(){
+  document.getElementById('rPermsGrid').innerHTML = ALL_PERMISSIONS.map(p=>`
+    <label><input type="checkbox" value="${p}" class="role-perm-check"> ${p}</label>`).join('');
+}
+buildRolePermsGrid();
+
+async function loadRoles(){
+  const res = await fetch(`${API}/api/admin/roles`, { headers: authHeaders() });
+  if(res.status===401) return;
+  const { roles } = await res.json();
+  ROLES = roles;
+  document.getElementById('rolesBody').innerHTML = roles.map(r => `
+    <tr>
+      <td>${r.name}</td>
+      <td>${r.label||r.name}</td>
+      <td>${(r.permissions||[]).join(', ')||'-'}</td>
+      <td class="row-actions"><button class="btn btn-sm btn-danger" onclick="delRole('${r._id}')">Delete</button></td>
+    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--dim)">No custom roles yet</td></tr>';
+
+  // Keep the "Add Employee" role dropdown in sync with available roles.
+  const uRoleSel = document.getElementById('uRole');
+  const current = uRoleSel.value;
+  uRoleSel.innerHTML = roles.map(r=>`<option value="${r.name}">${r.label||r.name}</option>`).join('')
+    + '<option value="admin">Admin (full access)</option>';
+  if([...uRoleSel.options].some(o=>o.value===current)) uRoleSel.value = current;
+}
+document.getElementById('addRoleBtn').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('roleStatus');
+  const name = document.getElementById('rName').value.trim();
+  const label = document.getElementById('rLabel').value.trim();
+  const permissions = Array.from(document.querySelectorAll('.role-perm-check:checked')).map(c=>c.value);
+  if(!name){ statusEl.textContent = 'Role key required.'; return; }
+  statusEl.textContent = 'Saving...';
+  const res = await fetch(`${API}/api/admin/roles`, { method:'POST', headers: authHeaders(), body: JSON.stringify({name,label,permissions}) });
+  const d = await res.json();
+  statusEl.textContent = res.ok ? 'Role created.' : (d.error || 'Failed');
+  if(res.ok){
+    document.getElementById('rName').value=''; document.getElementById('rLabel').value='';
+    document.querySelectorAll('.role-perm-check').forEach(c=>c.checked=false);
+    loadRoles();
+  }
+});
+async function delRole(id){
+  if(!confirm('Delete this role? Users currently assigned to it must be reassigned first.')) return;
+  const res = await fetch(`${API}/api/admin/roles/${id}`, { method:'DELETE', headers: authHeaders() });
+  const d = await res.json();
+  if(!res.ok){ alert(d.error || 'Failed'); return; }
+  loadRoles();
+}
 
 /* ---------- users ---------- */
 function buildPermsGrid(){

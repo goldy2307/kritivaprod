@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
 
 const bookingSchema = new mongoose.Schema({
+  eventId: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
+  eventTitle: { type: String, trim: true }, // denormalized so history survives event edits/deletes
   name: { type: String, required: true, trim: true },
   phone: { type: String, required: true, trim: true },
   email: { type: String, trim: true },
-  planType: { type: String, required: true }, // Family Pass / Silver Sponsor / Gold Sponsor / Title Sponsor / Stall-Vendor
+  planType: { type: String, required: true }, // package name chosen, or "General Enquiry"
   passes: { type: Number, default: 1 },
   day: { type: String, default: 'All 3 Days' },
   message: { type: String },

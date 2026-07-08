@@ -10,6 +10,8 @@ const Booking = require('../models/Booking');
 const Banner = require('../models/Banner');
 const PriceConfig = require('../models/PriceConfig');
 const Coupon = require('../models/Coupon');
+const Event = require('../models/Event');
+const Role = require('../models/Role');
 const { requireAuth, requirePermission } = require('../middleware/auth');
 const { sendMail } = require('../utils/mailer');
 const { generateInvoicePDF } = require('../utils/invoice');
@@ -187,12 +189,12 @@ router.post('/bookings/:id/invoice', requireAuth, requirePermission('bookings'),
       try {
         await sendMail({
           to: booking.email,
-          subject: `Your Invoice — ${invoiceNumber} | Royal Garba Nights 2026`,
+          subject: `Your Invoice — ${invoiceNumber}${booking.eventTitle ? ` | ${booking.eventTitle}` : ''}`,
           heading: 'Invoice Attached',
           bodyLines: [
             `Dear ${booking.name},`,
-            `Please find attached your invoice <b>${invoiceNumber}</b> for ${booking.planType}.`,
-            `We look forward to celebrating with you at Blue Lotus, Indore.`
+            `Please find attached your invoice <b>${invoiceNumber}</b> for ${booking.planType}${booking.eventTitle ? ` — ${booking.eventTitle}` : ''}.`,
+            `We look forward to celebrating with you.`
           ],
           attachments: [{ filename, path: filePath }]
         });
@@ -275,6 +277,127 @@ router.patch('/coupons/:id', requireAuth, requirePermission('coupons'), async (r
 
 router.delete('/coupons/:id', requireAuth, requirePermission('coupons'), async (req, res) => {
   await Coupon.findByIdAndDelete(req.params.id);
+  res.json({ ok: true });
+});
+
+/* ================= EVENTS ================= */
+// Powers the homepage "Upcoming Events" section and gates Reserve Now: only
+// events created here (and listed=true) can be enquired about on the site.
+const eventStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(__dirname, '..', 'uploads', 'events');
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`)
+});
+const uploadEventImage = multer({ storage: eventStorage, limits: { fileSize: 5 * 1024 * 1024 } });
+
+router.get('/events', requireAuth, requirePermission('events'), async (req, res) => {
+  const events = await Event.find().sort({ order: 1, createdAt: -1 });
+  res.json(events);
+});
+
+router.post('/events', requireAuth, requirePermission('events'), uploadEventImage.single('image'), async (req, res) => {
+  try {
+    let packages = [];
+    try { packages = JSON.parse(req.body.packages || '[]'); } catch (_) {}
+    const event = await Event.create({
+      title: req.body.title,
+      category: req.body.category || 'General',
+      tagline: req.body.tagline,
+      description: req.body.description,
+      dateLabel: req.body.dateLabel,
+      startDate: req.body.startDate || undefined,
+      endDate: req.body.endDate || undefined,
+      location: req.body.location,
+      image: req.file ? `/uploads/events/${req.file.filename}` : undefined,
+      packages,
+      status: req.body.status || 'upcoming',
+      listed: req.body.listed !== undefined ? (req.body.listed === 'true' || req.body.listed === true) : true,
+      order: Number(req.body.order) || 0
+    });
+    res.status(201).json(event);
+  } catch (err) {
+    console.error('EVENT CREATE ERROR:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.patch('/events/:id', requireAuth, requirePermission('events'), uploadEventImage.single('image'), async (req, res) => {
+  try {
+    const update = {};
+    ['title', 'category', 'tagline', 'description', 'dateLabel', 'location', 'status'].forEach(f => {
+      if (req.body[f] !== undefined) update[f] = req.body[f];
+    });
+    if (req.body.startDate !== undefined) update.startDate = req.body.startDate || undefined;
+    if (req.body.endDate !== undefined) update.endDate = req.body.endDate || undefined;
+    if (req.body.order !== undefined) update.order = Number(req.body.order) || 0;
+    if (req.body.listed !== undefined) update.listed = req.body.listed === 'true' || req.body.listed === true;
+    if (req.body.packages !== undefined) {
+      try { update.packages = JSON.parse(req.body.packages); } catch (_) {}
+    }
+    if (req.file) update.image = `/uploads/events/${req.file.filename}`;
+
+    const event = await Event.findByIdAndUpdate(req.params.id, update, { new: true });
+    if (!event) return res.status(404).json({ error: 'Not found' });
+    res.json(event);
+  } catch (err) {
+    console.error('EVENT UPDATE ERROR:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.delete('/events/:id', requireAuth, requirePermission('events'), async (req, res) => {
+  const event = await Event.findByIdAndDelete(req.params.id);
+  if (event && event.image) {
+    const filePath = path.join(__dirname, '..', event.image);
+    fs.unlink(filePath, () => {});
+  }
+  res.json({ ok: true });
+});
+
+/* ================= ROLES ================= */
+// Custom back-office roles the "Manage Users" screen can assign. 'admin' is a
+// built-in super-role and is not managed here (see middleware/auth.js).
+router.get('/roles', requireAuth, requirePermission('roles'), async (req, res) => {
+  const roles = await Role.find().sort({ name: 1 });
+  res.json({ roles, permissions: Admin.PERMISSIONS });
+});
+
+router.post('/roles', requireAuth, requirePermission('roles'), async (req, res) => {
+  try {
+    const { name, label, permissions } = req.body;
+    if (!name) return res.status(400).json({ error: 'name required' });
+    if (name === 'admin') return res.status(400).json({ error: '"admin" is a reserved built-in role' });
+    const role = await Role.create({ name, label: label || name, permissions: permissions || [] });
+    res.status(201).json(role);
+  } catch (err) {
+    if (err.code === 11000) return res.status(409).json({ error: 'Role already exists' });
+    console.error('ROLE CREATE ERROR:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.patch('/roles/:id', requireAuth, requirePermission('roles'), async (req, res) => {
+  const { label, permissions } = req.body;
+  const update = {};
+  if (label !== undefined) update.label = label;
+  if (permissions !== undefined) update.permissions = permissions;
+  const role = await Role.findByIdAndUpdate(req.params.id, update, { new: true });
+  if (!role) return res.status(404).json({ error: 'Not found' });
+  // Keep already-issued tokens aside: permission changes take effect on next login,
+  // but update currently-stored per-user permission snapshots too so the panel stays in sync.
+  await Admin.updateMany({ role: role.name }, { permissions: role.permissions });
+  res.json(role);
+});
+
+router.delete('/roles/:id', requireAuth, requirePermission('roles'), async (req, res) => {
+  const role = await Role.findById(req.params.id);
+  if (!role) return res.status(404).json({ error: 'Not found' });
+  const inUse = await Admin.countDocuments({ role: role.name });
+  if (inUse > 0) return res.status(400).json({ error: `Role in use by ${inUse} user(s). Reassign them first.` });
+  await Role.findByIdAndDelete(req.params.id);
   res.json({ ok: true });
 });
 
@@ -368,11 +491,16 @@ router.post('/users', requireAuth, requirePermission('users'), uploadProfile.sin
     if (!username || !password) return res.status(400).json({ error: 'username and password required' });
     let permissions = [];
     try { permissions = JSON.parse(req.body.permissions || '[]'); } catch (_) {}
+    const finalRole = role || 'back-office';
+    if (finalRole !== 'admin') {
+      const roleDoc = await Role.findOne({ name: finalRole });
+      if (!roleDoc) return res.status(400).json({ error: `Unknown role "${finalRole}". Create it under Manage Roles first.` });
+    }
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await Admin.create({
       name, username, mobile, email, passwordHash,
-      role: role === 'admin' ? 'admin' : 'back-office',
-      permissions: role === 'admin' ? [] : permissions,
+      role: finalRole,
+      permissions: finalRole === 'admin' ? [] : permissions,
       profileImage: req.file ? `/uploads/profiles/${req.file.filename}` : undefined
     });
     const safe = user.toObject();
@@ -392,7 +520,13 @@ router.patch('/users/:id', requireAuth, requirePermission('users'), uploadProfil
   if (mobile !== undefined) update.mobile = mobile;
   if (email !== undefined) update.email = email;
   if (active !== undefined) update.active = active === 'true' || active === true;
-  if (role) update.role = role === 'admin' ? 'admin' : 'back-office';
+  if (role) {
+    if (role !== 'admin') {
+      const roleDoc = await Role.findOne({ name: role });
+      if (!roleDoc) return res.status(400).json({ error: `Unknown role "${role}". Create it under Manage Roles first.` });
+    }
+    update.role = role;
+  }
   if (req.body.permissions !== undefined) {
     try { update.permissions = JSON.parse(req.body.permissions); } catch (_) {}
   }
