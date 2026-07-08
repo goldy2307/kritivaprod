@@ -14,6 +14,7 @@ const adminRoutes = require('./routes/admin');
 });
 
 const app = express();
+app.set('trust proxy', 1);
 
 const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
 app.use(cors({
