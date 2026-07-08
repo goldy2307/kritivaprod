@@ -11,11 +11,21 @@
 body{margin:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',Arial,sans-serif;min-height:100vh}
 .hidden{display:none !important}
 
-/* Login */
-#loginView{min-height:100vh;display:flex;align-items:center;justify-content:center}
-.login-box{background:var(--panel);border:1px solid var(--line);padding:44px;border-radius:8px;width:100%;max-width:360px}
-.login-box h1{font-size:20px;color:var(--gold-l);margin:0 0 4px 0;letter-spacing:.05em}
-.login-box p{color:var(--dim);font-size:12px;margin:0 0 24px 0}
+/* ===== Login ===== */
+#loginView{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+#loginView::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(212,175,55,0.10), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(212,175,55,0.08), transparent 45%),
+    repeating-linear-gradient(45deg, rgba(212,175,55,0.02) 0 2px, transparent 2px 40px),
+    linear-gradient(160deg,#0a0705 0%,#150f09 60%,#0a0705 100%);
+  z-index:0;
+}
+.login-box{position:relative;z-index:1;background:rgba(18,13,9,0.9);backdrop-filter:blur(6px);border:1px solid var(--line);padding:44px;border-radius:10px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.login-box .lg-logo{width:52px;height:52px;border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:Georgia,serif;font-size:20px;margin:0 auto 18px auto}
+.login-box h1{font-size:20px;color:var(--gold-l);margin:0 0 4px 0;letter-spacing:.05em;text-align:center}
+.login-box p{color:var(--dim);font-size:12px;margin:0 0 24px 0;text-align:center}
 .field{margin-bottom:16px}
 label{display:block;font-size:12px;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em}
 input,select,textarea,button{font-family:inherit}
@@ -27,27 +37,47 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold)}
 .btn-sm{padding:6px 12px;font-size:11px}
 .btn-danger{background:var(--danger);color:#fff}
 .btn-ok{background:var(--ok);color:#fff}
+.link-btn{background:none;border:none;color:var(--gold);font-size:12px;cursor:pointer;text-decoration:underline;padding:0}
 #loginError{color:#e57373;font-size:12px;margin-top:10px;min-height:16px}
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:42px}
+.pw-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px;padding:4px}
+.login-links{display:flex;justify-content:space-between;margin-top:14px;font-size:12px}
 
-/* Dashboard shell */
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:30px;width:100%;max-width:400px}
+.modal h3{color:var(--gold-l);margin:0 0 6px 0;font-size:18px}
+.modal p.hint{color:var(--dim);font-size:12px;margin:0 0 18px 0}
+.captcha-row{display:flex;align-items:center;gap:12px;background:#1a1410;border:1px solid var(--line);border-radius:4px;padding:12px;margin-bottom:16px}
+.captcha-row .q{font-family:Georgia,serif;font-size:20px;color:var(--gold-l);letter-spacing:2px}
+.modal-actions{display:flex;gap:10px;margin-top:8px}
+.modal-status{font-size:12px;color:var(--gold-l);min-height:16px;margin-top:8px}
+
+/* ===== Dashboard shell ===== */
 #dashView{display:flex;min-height:100vh}
-.sidebar{width:220px;background:var(--panel);border-right:1px solid var(--line);padding:24px 0;flex:none}
-.sidebar h2{font-size:16px;color:var(--gold-l);padding:0 24px;margin:0 0 30px 0;letter-spacing:.05em}
+.sidebar{width:230px;background:var(--panel);border-right:1px solid var(--line);padding:24px 0;flex:none}
+.sidebar h2{font-size:16px;color:var(--gold-l);padding:0 24px;margin:0 0 6px 0;letter-spacing:.05em}
 .sidebar .who{padding:0 24px;color:var(--dim);font-size:11px;margin-bottom:24px}
 .navitem{padding:12px 24px;color:var(--dim);cursor:pointer;font-size:14px;border-left:3px solid transparent}
 .navitem.active{color:var(--gold-l);border-left-color:var(--gold);background:rgba(212,175,55,0.06)}
 .navitem:hover{color:var(--ink)}
-.logout{margin-top:30px;padding:0 24px}
+.logout{margin-top:20px;padding:0 24px;display:flex;flex-direction:column;gap:8px}
 main{flex:1;padding:36px;overflow-x:auto}
 h1.page-title{font-size:22px;color:var(--gold-l);margin:0 0 24px 0}
 
-/* Stat cards */
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:30px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:14px}
 .stat-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px}
 .stat-card .n{font-size:28px;color:var(--gold);font-weight:600}
 .stat-card .l{font-size:12px;color:var(--dim);margin-top:4px;text-transform:uppercase;letter-spacing:.05em}
 
-/* Table */
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px}
+.quick-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px;cursor:pointer;transition:border-color .2s,transform .2s}
+.quick-card:hover{border-color:var(--gold);transform:translateY(-3px)}
+.quick-card .icon{font-size:22px;color:var(--gold);margin-bottom:10px}
+.quick-card h4{margin:0 0 4px 0;color:var(--ink);font-size:15px}
+.quick-card p{margin:0;color:var(--dim);font-size:12px}
+
 table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
 th,td{padding:12px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--line)}
 th{color:var(--gold);text-transform:uppercase;font-size:11px;letter-spacing:.05em;background:rgba(212,175,55,0.05)}
@@ -56,24 +86,33 @@ tr:last-child td{border-bottom:none}
 .status-pending{background:#4a3c1a;color:#e0c060}
 .status-confirmed{background:#1a4a2a;color:#6fd18a}
 .status-cancelled{background:#4a1a1a;color:#e08080}
+.role-pill{padding:2px 8px;border-radius:4px;font-size:10px;text-transform:uppercase;background:#2a2418;color:var(--gold-l)}
 .filters{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
 .filters input,.filters select{width:auto;min-width:160px}
 .row-actions{display:flex;gap:6px;flex-wrap:wrap}
 
-/* Banners grid */
 .banner-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:20px}
 .banner-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .banner-card img{width:100%;height:120px;object-fit:cover;display:block}
 .banner-card .body{padding:12px}
 .banner-card .body p{font-size:12px;color:var(--dim);margin:4px 0}
-.size-guide{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-top:16px;font-size:12px;color:var(--dim)}
+.size-guide{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-top:16px;font-size:12px;color:var(--dim);line-height:1.8}
 .size-guide b{color:var(--gold-l)}
 
-.upload-box{background:var(--panel);border:1px dashed var(--line);border-radius:8px;padding:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:end}
+.upload-box{background:var(--panel);border:1px dashed var(--line);border-radius:8px;padding:24px;display:grid;grid-template-columns:repeat(2,1fr);gap:14px;align-items:end}
+.card-box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:24px}
+.card-box + .card-box{margin-top:20px}
 
 .mail-box{max-width:640px}
-.mail-box .field{margin-bottom:16px}
-#mailStatus,#uploadStatus{font-size:12px;color:var(--gold-l);margin-top:10px}
+#mailStatus,#uploadStatus,#pricingStatus,#couponStatus,#userStatus{font-size:12px;color:var(--gold-l);margin-top:10px}
+
+.price-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;align-items:center;margin-bottom:12px}
+.price-grid label{margin:0}
+.checkbox-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px}
+.checkbox-grid label{display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;color:var(--ink)}
+.checkbox-grid input{width:auto}
+.avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--line)}
+.avatar-placeholder{width:34px;height:34px;border-radius:50%;background:#2a2418;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:12px}
 </style>
 </head>
 <body>
@@ -81,29 +120,78 @@ tr:last-child td{border-bottom:none}
 <!-- LOGIN -->
 <div id="loginView">
   <div class="login-box">
+    <div class="lg-logo">KP</div>
     <h1>Kritiva Admin</h1>
-     <img src="/assets/kp_logo_png.png" style="width:40px;display:block;margin:0 auto 12px auto">
     <p>Authorized personnel only</p>
     <form id="loginForm">
       <div class="field"><label>Username</label><input type="text" id="loginUser" required></div>
-      <div class="field"><label>Password</label><input type="password" id="loginPass" required></div>
+      <div class="field">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="loginPass" required>
+          <button type="button" class="pw-toggle" data-target="loginPass">👁</button>
+        </div>
+      </div>
       <button class="btn btn-gold" type="submit">Sign In</button>
       <div id="loginError"></div>
+      <div class="login-links">
+        <button type="button" class="link-btn" id="openForgot">Forgot password?</button>
+      </div>
     </form>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div id="forgotModal" class="modal-overlay hidden">
+  <div class="modal">
+    <h3>Reset Password</h3>
+    <p class="hint" id="forgotStep1Hint">OTP will be sent only to the registered company inbox — not to your personal email.</p>
+
+    <div id="forgotStep1">
+      <div class="field"><label>Username</label><input type="text" id="fpUsername"></div>
+      <div class="captcha-row">
+        <span class="q" id="captchaQ">–</span>
+        <input type="number" id="captchaAnswer" placeholder="Answer">
+        <button type="button" class="link-btn" id="refreshCaptcha">↻</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-gold" id="sendOtpBtn">Send OTP</button>
+        <button class="btn btn-outline" id="closeForgot1">Cancel</button>
+      </div>
+    </div>
+
+    <div id="forgotStep2" class="hidden">
+      <div class="field"><label>OTP (check kritivaproductions@gmail.com)</label><input type="text" id="fpOtp"></div>
+      <div class="field">
+        <label>New Password</label>
+        <div class="pw-wrap"><input type="password" id="fpNewPass"><button type="button" class="pw-toggle" data-target="fpNewPass">👁</button></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-gold" id="resetPassBtn">Reset Password</button>
+        <button class="btn btn-outline" id="closeForgot2">Cancel</button>
+      </div>
+    </div>
+
+    <div class="modal-status" id="forgotStatus"></div>
   </div>
 </div>
 
 <!-- DASHBOARD -->
 <div id="dashView" class="hidden">
   <div class="sidebar">
-    <img src="/assets/kp_logo_png.png" style="width:40px;display:block;margin:0 auto 12px auto">
-<h2>KRITIVA ADMIN</h2>
+    <h2>KRITIVA ADMIN</h2>
     <div class="who" id="whoami"></div>
     <div class="navitem active" data-view="overview">Overview</div>
     <div class="navitem" data-view="bookings">Bookings</div>
+    <div class="navitem" data-view="pricing">Pricing &amp; Sponsorship</div>
+    <div class="navitem" data-view="coupons">Discount Coupons</div>
     <div class="navitem" data-view="banners">Banners</div>
     <div class="navitem" data-view="mail">Send Mail</div>
-    <div class="logout"><button class="btn btn-outline" id="logoutBtn" style="width:100%">Log Out</button></div>
+    <div class="navitem" data-view="users">Manage Users</div>
+    <div class="logout">
+      <button class="btn btn-outline" id="changePassBtn" style="width:100%">Change Password</button>
+      <button class="btn btn-outline" id="logoutBtn" style="width:100%">Log Out</button>
+    </div>
   </div>
 
   <main>
@@ -116,11 +204,34 @@ tr:last-child td{border-bottom:none}
         <div class="stat-card"><div class="n" id="s-confirmed">-</div><div class="l">Confirmed</div></div>
         <div class="stat-card"><div class="n" id="s-revenue">-</div><div class="l">Confirmed Revenue</div></div>
       </div>
+      <div class="quick-grid" id="quickGrid">
+        <div class="quick-card" data-goto="bookings"><div class="icon">📋</div><h4>Bookings</h4><p>View, filter, confirm, invoice</p></div>
+        <div class="quick-card" data-goto="pricing"><div class="icon">₹</div><h4>Pricing &amp; Sponsorship</h4><p>Update pass &amp; sponsor prices</p></div>
+        <div class="quick-card" data-goto="coupons"><div class="icon">🎟</div><h4>Discount Coupons</h4><p>Create and manage promo codes</p></div>
+        <div class="quick-card" data-goto="banners"><div class="icon">🖼</div><h4>Banners</h4><p>Manage homepage promotions</p></div>
+        <div class="quick-card" data-goto="mail"><div class="icon">✉</div><h4>Send Mail</h4><p>One-off branded emails to leads</p></div>
+        <div class="quick-card" data-goto="users"><div class="icon">👤</div><h4>Manage Users</h4><p>Add staff, set roles &amp; permissions</p></div>
+      </div>
     </section>
 
     <!-- BOOKINGS -->
     <section id="view-bookings" class="hidden">
       <h1 class="page-title">Bookings</h1>
+
+      <div class="card-box" style="margin-bottom:20px">
+        <h4 style="margin-top:0;color:var(--gold-l)">Add Manual Booking (walk-in / phone)</h4>
+        <div class="upload-box" style="grid-template-columns:repeat(4,1fr)">
+          <div class="field"><label>Name</label><input type="text" id="mbName"></div>
+          <div class="field"><label>Phone</label><input type="text" id="mbPhone"></div>
+          <div class="field"><label>Email</label><input type="email" id="mbEmail"></div>
+          <div class="field"><label>Plan</label><select id="mbPlan"></select></div>
+          <div class="field"><label>Passes</label><input type="number" id="mbPasses" value="1" min="1"></div>
+          <div class="field"><label>Day</label><input type="text" id="mbDay" placeholder="All 3 Days"></div>
+          <div class="field"><label>Amount (auto, editable)</label><input type="number" id="mbAmount"></div>
+          <button class="btn btn-gold" id="addBookingBtn">Add Booking</button>
+        </div>
+      </div>
+
       <div class="filters">
         <input type="text" id="searchQ" placeholder="Search name / phone / email">
         <select id="filterStatus"><option value="">All Status</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="cancelled">Cancelled</option></select>
@@ -132,22 +243,54 @@ tr:last-child td{border-bottom:none}
       </table>
     </section>
 
+    <!-- PRICING -->
+    <section id="view-pricing" class="hidden">
+      <h1 class="page-title">Pricing &amp; Sponsorship</h1>
+      <div class="card-box">
+        <p style="color:var(--dim);font-size:13px;margin-top:0">These prices auto-fill on the booking form (site + admin manual entry). Editing here updates them everywhere.</p>
+        <div id="priceRows"></div>
+        <button class="btn btn-gold" id="savePricingBtn" style="width:auto;margin-top:10px">Save Prices</button>
+        <div id="pricingStatus"></div>
+      </div>
+    </section>
+
+    <!-- COUPONS -->
+    <section id="view-coupons" class="hidden">
+      <h1 class="page-title">Discount Coupons</h1>
+      <div class="upload-box" style="grid-template-columns:repeat(3,1fr)">
+        <div class="field"><label>Code</label><input type="text" id="cCode" placeholder="e.g. EARLYBIRD10"></div>
+        <div class="field"><label>Type</label><select id="cType"><option value="percent">Percent Off</option><option value="flat">Flat Amount Off</option></select></div>
+        <div class="field"><label>Value</label><input type="number" id="cValue" placeholder="10 (=10% or Rs.10)"></div>
+        <div class="field"><label>Max Uses (0 = unlimited)</label><input type="number" id="cMaxUses" value="0"></div>
+        <div class="field"><label>Expires On (optional)</label><input type="date" id="cExpires"></div>
+        <button class="btn btn-gold" id="addCouponBtn">Create Coupon</button>
+        <div id="couponStatus" style="grid-column:1/-1"></div>
+      </div>
+      <table style="margin-top:20px">
+        <thead><tr><th>Code</th><th>Type</th><th>Value</th><th>Used</th><th>Max</th><th>Expires</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="couponsBody"></tbody>
+      </table>
+    </section>
+
     <!-- BANNERS -->
     <section id="view-banners" class="hidden">
       <h1 class="page-title">Banners</h1>
       <div class="upload-box">
         <div class="field"><label>Title</label><input type="text" id="bannerTitle" placeholder="e.g. Early Bird Offer"></div>
-        <div class="field"><label>Placement</label>
-          <select id="bannerPlacement"><option value="promo-section">Homepage Promo Section</option></select>
-        </div>
+        <div class="field"><label>Placement</label><select id="bannerPlacement"></select></div>
+        <div class="field"><label>Click-through Link (optional)</label><input type="text" id="bannerLink" placeholder="https://..."></div>
         <div class="field"><label>Image File</label><input type="file" id="bannerFile" accept="image/*"></div>
         <button class="btn btn-gold" id="uploadBannerBtn" style="grid-column:1/-1">Upload Banner</button>
         <div id="uploadStatus" style="grid-column:1/-1"></div>
       </div>
       <div class="size-guide">
-        <b>Suggested banner sizes:</b><br>
-        Homepage promo strip: <b>1600 x 600px</b> (JPG/PNG, under 500KB, landscape)<br>
-        Keep text within the center 80% to avoid cropping on mobile.
+        <b>Suggested sizes by placement:</b><br>
+        Hero Strip: <b>1920 x 250px</b> (thin banner inside hero)<br>
+        Promo Section: <b>1600 x 600px</b> (main landscape block)<br>
+        Venue Section: <b>1200 x 500px</b><br>
+        Sponsorship Section: <b>1200 x 400px</b><br>
+        Footer Strip: <b>1600 x 300px</b><br>
+        All: JPG/PNG, under 500KB, keep key text in center 80% for mobile safety.
       </div>
       <div class="banner-grid" id="bannerGrid"></div>
     </section>
@@ -167,28 +310,80 @@ tr:last-child td{border-bottom:none}
         <div id="mailStatus"></div>
       </div>
     </section>
+
+    <!-- USERS -->
+    <section id="view-users" class="hidden">
+      <h1 class="page-title">Manage Users</h1>
+      <div class="card-box">
+        <h4 style="margin-top:0;color:var(--gold-l)">Add Employee</h4>
+        <div class="upload-box" style="grid-template-columns:repeat(3,1fr)">
+          <div class="field"><label>Full Name</label><input type="text" id="uName"></div>
+          <div class="field"><label>Username</label><input type="text" id="uUsername"></div>
+          <div class="field"><label>Mobile</label><input type="text" id="uMobile"></div>
+          <div class="field"><label>Email</label><input type="email" id="uEmail"></div>
+          <div class="field">
+            <label>Password</label>
+            <div class="pw-wrap"><input type="password" id="uPassword"><button type="button" class="pw-toggle" data-target="uPassword">👁</button></div>
+          </div>
+          <div class="field"><label>Profile Image</label><input type="file" id="uProfileImage" accept="image/*"></div>
+          <div class="field">
+            <label>Role</label>
+            <select id="uRole"><option value="back-office">Back Office</option><option value="admin">Admin (full access)</option></select>
+          </div>
+        </div>
+        <div class="field" id="uPermsWrap">
+          <label>Permissions (Back Office only — Admin gets full access automatically)</label>
+          <div class="checkbox-grid" id="uPermsGrid"></div>
+        </div>
+        <button class="btn btn-gold" id="addUserBtn" style="width:auto">Add Employee</button>
+        <div id="userStatus"></div>
+      </div>
+
+      <table style="margin-top:20px">
+        <thead><tr><th></th><th>Name</th><th>Username</th><th>Role</th><th>Mobile</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+    </section>
   </main>
 </div>
 
 <script>
 const API = window.location.origin.includes('localhost') ? 'http://localhost:5000' : window.location.origin;
 let TOKEN = localStorage.getItem('kp_token') || '';
+let CAPTCHA_ID = '';
+const ALL_PLANS = ['Family Pass','Silver Sponsor','Gold Sponsor','Title Sponsor','Stall/Vendor'];
+const ALL_PERMISSIONS = ['bookings','banners','pricing','coupons','mail','users'];
 
-function authHeaders(){ return { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type':'application/json' }; }
+function authHeaders(json=true){
+  const h = { 'Authorization': `Bearer ${TOKEN}` };
+  if(json) h['Content-Type'] = 'application/json';
+  return h;
+}
 
+/* ---------- password visibility toggles (works for any .pw-toggle on the page) ---------- */
+document.addEventListener('click', (e)=>{
+  if(e.target.classList.contains('pw-toggle')){
+    const input = document.getElementById(e.target.dataset.target);
+    if(!input) return;
+    input.type = input.type === 'password' ? 'text' : 'password';
+    e.target.textContent = input.type === 'password' ? '👁' : '🙈';
+  }
+});
+
+/* ---------- view switching ---------- */
 function showDash(){
   document.getElementById('loginView').classList.add('hidden');
   document.getElementById('dashView').classList.remove('hidden');
   document.getElementById('whoami').textContent = localStorage.getItem('kp_user') || '';
-  loadOverview(); loadBookings(); loadBanners();
+  loadOverview(); loadBookings(); loadPricingForm(); loadCoupons(); loadBanners(); loadUsers();
 }
 function showLogin(){
   document.getElementById('dashView').classList.add('hidden');
   document.getElementById('loginView').classList.remove('hidden');
 }
-
 if(TOKEN) showDash(); else showLogin();
 
+/* ---------- login ---------- */
 document.getElementById('loginForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const username = document.getElementById('loginUser').value;
@@ -201,7 +396,8 @@ document.getElementById('loginForm').addEventListener('submit', async (e)=>{
     if(!res.ok) throw new Error(data.error || 'Login failed');
     TOKEN = data.token;
     localStorage.setItem('kp_token', TOKEN);
-    localStorage.setItem('kp_user', `${data.admin.username} (${data.admin.role})`);
+    localStorage.setItem('kp_user', `${data.admin.name || data.admin.username} (${data.admin.role})`);
+    localStorage.setItem('kp_role', data.admin.role);
     showDash();
   }catch(err){ errEl.textContent = err.message; }
 });
@@ -210,17 +406,90 @@ document.getElementById('logoutBtn').addEventListener('click', ()=>{
   localStorage.removeItem('kp_token'); localStorage.removeItem('kp_user'); TOKEN=''; showLogin();
 });
 
-/* Nav */
-document.querySelectorAll('.navitem').forEach(item=>{
-  item.addEventListener('click', ()=>{
-    document.querySelectorAll('.navitem').forEach(i=>i.classList.remove('active'));
-    item.classList.add('active');
-    document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
-    document.getElementById('view-'+item.dataset.view).classList.remove('hidden');
-  });
+/* ---------- forgot password flow ---------- */
+async function loadCaptcha(){
+  const res = await fetch(`${API}/api/admin/forgot-password/captcha`);
+  const d = await res.json();
+  CAPTCHA_ID = d.captchaId;
+  document.getElementById('captchaQ').textContent = d.question;
+  document.getElementById('captchaAnswer').value = '';
+}
+document.getElementById('openForgot').addEventListener('click', ()=>{
+  document.getElementById('forgotModal').classList.remove('hidden');
+  document.getElementById('forgotStep1').classList.remove('hidden');
+  document.getElementById('forgotStep2').classList.add('hidden');
+  document.getElementById('forgotStatus').textContent = '';
+  loadCaptcha();
+});
+document.getElementById('refreshCaptcha').addEventListener('click', loadCaptcha);
+function closeForgot(){ document.getElementById('forgotModal').classList.add('hidden'); }
+document.getElementById('closeForgot1').addEventListener('click', closeForgot);
+document.getElementById('closeForgot2').addEventListener('click', closeForgot);
+
+document.getElementById('sendOtpBtn').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('forgotStatus');
+  const username = document.getElementById('fpUsername').value;
+  const captchaAnswer = document.getElementById('captchaAnswer').value;
+  if(!username || captchaAnswer===''){ statusEl.textContent = 'Fill username and captcha.'; return; }
+  statusEl.textContent = 'Sending...';
+  try{
+    const res = await fetch(`${API}/api/admin/forgot-password/request`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username, captchaId: CAPTCHA_ID, captchaAnswer })
+    });
+    const d = await res.json();
+    if(!res.ok) throw new Error(d.error || 'Failed');
+    statusEl.textContent = 'If the username exists, an OTP was sent to the registered company inbox.';
+    document.getElementById('forgotStep1').classList.add('hidden');
+    document.getElementById('forgotStep2').classList.remove('hidden');
+  }catch(err){ statusEl.textContent = err.message; loadCaptcha(); }
 });
 
-/* Overview */
+document.getElementById('resetPassBtn').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('forgotStatus');
+  const username = document.getElementById('fpUsername').value;
+  const otp = document.getElementById('fpOtp').value;
+  const newPassword = document.getElementById('fpNewPass').value;
+  if(!otp || !newPassword){ statusEl.textContent = 'Enter OTP and new password.'; return; }
+  statusEl.textContent = 'Resetting...';
+  try{
+    const res = await fetch(`${API}/api/admin/forgot-password/reset`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username, otp, newPassword })
+    });
+    const d = await res.json();
+    if(!res.ok) throw new Error(d.error || 'Failed');
+    statusEl.textContent = 'Password reset. You can log in now.';
+    setTimeout(closeForgot, 1500);
+  }catch(err){ statusEl.textContent = err.message; }
+});
+
+/* ---------- change password (logged in) ---------- */
+document.getElementById('changePassBtn').addEventListener('click', async ()=>{
+  const currentPassword = prompt('Current password:');
+  if(currentPassword===null) return;
+  const newPassword = prompt('New password:');
+  if(newPassword===null) return;
+  const res = await fetch(`${API}/api/admin/change-password`, { method:'POST', headers: authHeaders(), body: JSON.stringify({currentPassword,newPassword}) });
+  const d = await res.json();
+  alert(res.ok ? 'Password changed.' : (d.error || 'Failed'));
+});
+
+/* ---------- nav ---------- */
+function gotoView(view){
+  document.querySelectorAll('.navitem').forEach(i=>i.classList.remove('active'));
+  document.querySelector(`.navitem[data-view="${view}"]`)?.classList.add('active');
+  document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
+  document.getElementById('view-'+view).classList.remove('hidden');
+}
+document.querySelectorAll('.navitem').forEach(item=>{
+  item.addEventListener('click', ()=> gotoView(item.dataset.view));
+});
+document.querySelectorAll('.quick-card').forEach(card=>{
+  card.addEventListener('click', ()=> gotoView(card.dataset.goto));
+});
+
+/* ---------- overview ---------- */
 async function loadOverview(){
   const res = await fetch(`${API}/api/admin/stats`, { headers: authHeaders() });
   if(res.status===401) return showLogin();
@@ -231,7 +500,47 @@ async function loadOverview(){
   document.getElementById('s-revenue').textContent = '₹'+ (d.confirmedRevenue||0).toLocaleString('en-IN');
 }
 
-/* Bookings */
+/* ---------- pricing cache used for booking auto-fill ---------- */
+let PRICE_MAP = {};
+async function refreshPriceMap(){
+  const res = await fetch(`${API}/api/admin/pricing`, { headers: authHeaders() });
+  if(!res.ok) return;
+  const prices = await res.json();
+  PRICE_MAP = {};
+  prices.forEach(p => PRICE_MAP[p.planType] = p.price);
+}
+
+/* ---------- bookings ---------- */
+function fillPlanSelect(sel){
+  sel.innerHTML = ALL_PLANS.map(p=>`<option value="${p}">${p}</option>`).join('');
+}
+fillPlanSelect(document.getElementById('mbPlan'));
+
+document.getElementById('mbPlan').addEventListener('change', updateManualAmount);
+document.getElementById('mbPasses').addEventListener('input', updateManualAmount);
+function updateManualAmount(){
+  const plan = document.getElementById('mbPlan').value;
+  const passes = Number(document.getElementById('mbPasses').value) || 1;
+  const unit = PRICE_MAP[plan] || 0;
+  document.getElementById('mbAmount').value = unit * passes;
+}
+
+document.getElementById('addBookingBtn').addEventListener('click', async ()=>{
+  const payload = {
+    name: document.getElementById('mbName').value,
+    phone: document.getElementById('mbPhone').value,
+    email: document.getElementById('mbEmail').value,
+    planType: document.getElementById('mbPlan').value,
+    passes: Number(document.getElementById('mbPasses').value) || 1,
+    day: document.getElementById('mbDay').value || 'All 3 Days',
+    amount: Number(document.getElementById('mbAmount').value) || 0
+  };
+  if(!payload.name || !payload.phone){ alert('Name and phone required'); return; }
+  const res = await fetch(`${API}/api/admin/bookings`, { method:'POST', headers: authHeaders(), body: JSON.stringify(payload) });
+  if(res.ok){ loadBookings(); loadOverview(); ['mbName','mbPhone','mbEmail','mbDay'].forEach(id=>document.getElementById(id).value=''); }
+  else alert('Failed to add booking');
+});
+
 async function loadBookings(){
   const q = document.getElementById('searchQ').value;
   const status = document.getElementById('filterStatus').value;
@@ -250,7 +559,7 @@ async function loadBookings(){
       <td>${b.passes||1}</td>
       <td>${b.day||'-'}</td>
       <td><span class="status-pill status-${b.status}">${b.status}</span></td>
-      <td>₹${(b.amount||0).toLocaleString('en-IN')}</td>
+      <td>₹${(b.amount||0).toLocaleString('en-IN')}${b.discountAmount?` <small style="color:var(--dim)">(-₹${b.discountAmount})</small>`:''}</td>
       <td class="row-actions">
         <select onchange="updateStatus('${b._id}',this.value)">
           <option value="">Set Status</option>
@@ -258,7 +567,7 @@ async function loadBookings(){
           <option value="confirmed" ${b.status==='confirmed'?'selected':''}>Confirmed</option>
           <option value="cancelled" ${b.status==='cancelled'?'selected':''}>Cancelled</option>
         </select>
-        <button class="btn btn-sm btn-outline" onclick="genInvoice('${b._id}')">Invoice</button>
+        <button class="btn btn-sm btn-outline" onclick="genInvoice('${b._id}', ${b.amount||0})">Invoice</button>
         <button class="btn btn-sm btn-danger" onclick="delBooking('${b._id}')">Delete</button>
       </td>
     </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--dim)">No bookings yet</td></tr>';
@@ -275,8 +584,8 @@ async function delBooking(id){
   await fetch(`${API}/api/admin/bookings/${id}`, { method:'DELETE', headers: authHeaders() });
   loadBookings(); loadOverview();
 }
-async function genInvoice(id){
-  const amount = prompt('Enter final invoice amount (INR):');
+async function genInvoice(id, currentAmount){
+  const amount = prompt('Confirm final invoice amount (INR):', currentAmount || 0);
   if(amount===null) return;
   const sendEmail = confirm('Email this invoice to the customer now?');
   const res = await fetch(`${API}/api/admin/bookings/${id}/invoice`, {
@@ -290,16 +599,94 @@ async function genInvoice(id){
   } else { alert(d.error || 'Failed'); }
 }
 
-/* Banners */
+/* ---------- pricing ---------- */
+async function loadPricingForm(){
+  await refreshPriceMap();
+  const rowsEl = document.getElementById('priceRows');
+  rowsEl.innerHTML = ALL_PLANS.map(plan => `
+    <div class="price-grid">
+      <label style="margin:0">${plan}</label>
+      <input type="number" data-plan="${plan}" class="price-input" value="${PRICE_MAP[plan] || 0}">
+      <span style="color:var(--dim);font-size:12px">INR</span>
+    </div>`).join('');
+}
+document.getElementById('savePricingBtn').addEventListener('click', async ()=>{
+  const items = Array.from(document.querySelectorAll('.price-input')).map(inp => ({
+    planType: inp.dataset.plan, price: Number(inp.value) || 0
+  }));
+  const statusEl = document.getElementById('pricingStatus');
+  statusEl.textContent = 'Saving...';
+  const res = await fetch(`${API}/api/admin/pricing`, { method:'PUT', headers: authHeaders(), body: JSON.stringify(items) });
+  statusEl.textContent = res.ok ? 'Saved. New bookings will use these prices.' : 'Failed to save.';
+  refreshPriceMap();
+});
+
+/* ---------- coupons ---------- */
+async function loadCoupons(){
+  const res = await fetch(`${API}/api/admin/coupons`, { headers: authHeaders() });
+  if(res.status===401) return;
+  const coupons = await res.json();
+  document.getElementById('couponsBody').innerHTML = coupons.map(c => `
+    <tr>
+      <td>${c.code}</td>
+      <td>${c.discountType}</td>
+      <td>${c.discountType==='percent' ? c.value+'%' : '₹'+c.value}</td>
+      <td>${c.usedCount}</td>
+      <td>${c.maxUses || '∞'}</td>
+      <td>${c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('en-IN') : '-'}</td>
+      <td>${c.active ? '🟢 Active' : '⚪ Inactive'}</td>
+      <td class="row-actions">
+        <button class="btn btn-sm btn-outline" onclick="toggleCoupon('${c._id}',${!c.active})">${c.active?'Deactivate':'Activate'}</button>
+        <button class="btn btn-sm btn-danger" onclick="delCoupon('${c._id}')">Delete</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--dim)">No coupons yet</td></tr>';
+}
+document.getElementById('addCouponBtn').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('couponStatus');
+  const payload = {
+    code: document.getElementById('cCode').value,
+    discountType: document.getElementById('cType').value,
+    value: Number(document.getElementById('cValue').value),
+    maxUses: Number(document.getElementById('cMaxUses').value) || 0,
+    expiresAt: document.getElementById('cExpires').value || undefined
+  };
+  if(!payload.code || !payload.value){ statusEl.textContent = 'Code and value required.'; return; }
+  const res = await fetch(`${API}/api/admin/coupons`, { method:'POST', headers: authHeaders(), body: JSON.stringify(payload) });
+  const d = await res.json();
+  statusEl.textContent = res.ok ? 'Coupon created.' : (d.error || 'Failed');
+  if(res.ok){ loadCoupons(); document.getElementById('cCode').value=''; document.getElementById('cValue').value=''; }
+});
+async function toggleCoupon(id, active){
+  await fetch(`${API}/api/admin/coupons/${id}`, { method:'PATCH', headers: authHeaders(), body: JSON.stringify({active}) });
+  loadCoupons();
+}
+async function delCoupon(id){
+  if(!confirm('Delete this coupon?')) return;
+  await fetch(`${API}/api/admin/coupons/${id}`, { method:'DELETE', headers: authHeaders() });
+  loadCoupons();
+}
+
+/* ---------- banners ---------- */
+function fillPlacementSelect(){
+  const sel = document.getElementById('bannerPlacement');
+  const labels = {
+    'hero-strip':'Hero Strip', 'promo-section':'Promo Section',
+    'venue-section':'Venue Section', 'sponsorship-section':'Sponsorship Section', 'footer-strip':'Footer Strip'
+  };
+  sel.innerHTML = Object.keys(labels).map(k=>`<option value="${k}">${labels[k]}</option>`).join('');
+}
+fillPlacementSelect();
+
 async function loadBanners(){
   const res = await fetch(`${API}/api/admin/banners`, { headers: authHeaders() });
   if(res.status===401) return;
-  const banners = await res.json();
+  const { banners } = await res.json();
   document.getElementById('bannerGrid').innerHTML = banners.map(b => `
     <div class="banner-card">
       <img src="${API}${b.url}">
       <div class="body">
         <strong>${b.title||'Untitled'}</strong>
+        <p>${b.placement}</p>
         <p>${b.active ? '🟢 Active' : '⚪ Inactive'}</p>
         <div class="row-actions">
           ${b.active
@@ -327,13 +714,14 @@ document.getElementById('uploadBannerBtn').addEventListener('click', async ()=>{
   fd.append('banner', fileInput.files[0]);
   fd.append('title', document.getElementById('bannerTitle').value);
   fd.append('placement', document.getElementById('bannerPlacement').value);
+  fd.append('linkUrl', document.getElementById('bannerLink').value);
   statusEl.textContent = 'Uploading...';
-  const res = await fetch(`${API}/api/admin/banners`, { method:'POST', headers:{ 'Authorization': `Bearer ${TOKEN}` }, body: fd });
+  const res = await fetch(`${API}/api/admin/banners`, { method:'POST', headers: authHeaders(false), body: fd });
   if(res.ok){ statusEl.textContent='Uploaded.'; fileInput.value=''; loadBanners(); }
   else { statusEl.textContent='Upload failed.'; }
 });
 
-/* Mail */
+/* ---------- mail ---------- */
 document.getElementById('sendMailBtn').addEventListener('click', async ()=>{
   const statusEl = document.getElementById('mailStatus');
   const payload = {
@@ -350,6 +738,74 @@ document.getElementById('sendMailBtn').addEventListener('click', async ()=>{
   const res = await fetch(`${API}/api/admin/send-mail`, { method:'POST', headers: authHeaders(), body: JSON.stringify(payload) });
   statusEl.textContent = res.ok ? 'Email sent.' : 'Failed to send.';
 });
+
+/* ---------- users ---------- */
+function buildPermsGrid(){
+  document.getElementById('uPermsGrid').innerHTML = ALL_PERMISSIONS.map(p=>`
+    <label><input type="checkbox" value="${p}" class="perm-check"> ${p}</label>`).join('');
+}
+buildPermsGrid();
+document.getElementById('uRole').addEventListener('change', (e)=>{
+  document.getElementById('uPermsWrap').style.opacity = e.target.value==='admin' ? '0.4' : '1';
+  document.querySelectorAll('.perm-check').forEach(c=> c.disabled = e.target.value==='admin');
+});
+
+async function loadUsers(){
+  const res = await fetch(`${API}/api/admin/users`, { headers: authHeaders() });
+  if(res.status===401) return;
+  const { users } = await res.json();
+  document.getElementById('usersBody').innerHTML = users.map(u => `
+    <tr>
+      <td>${u.profileImage ? `<img class="avatar" src="${API}${u.profileImage}">` : `<div class="avatar-placeholder">${(u.name||u.username||'?')[0].toUpperCase()}</div>`}</td>
+      <td>${u.name||'-'}</td>
+      <td>${u.username}</td>
+      <td><span class="role-pill">${u.role}</span></td>
+      <td>${u.mobile||'-'}</td>
+      <td>${u.active ? '🟢 Active' : '⚪ Disabled'}</td>
+      <td class="row-actions">
+        <button class="btn btn-sm btn-outline" onclick="toggleUserActive('${u._id}', ${!u.active})">${u.active?'Disable':'Enable'}</button>
+        <button class="btn btn-sm btn-danger" onclick="delUser('${u._id}')">Delete</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--dim)">No users yet</td></tr>';
+}
+document.getElementById('addUserBtn').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('userStatus');
+  const role = document.getElementById('uRole').value;
+  const perms = Array.from(document.querySelectorAll('.perm-check:checked')).map(c=>c.value);
+  const fd = new FormData();
+  fd.append('name', document.getElementById('uName').value);
+  fd.append('username', document.getElementById('uUsername').value);
+  fd.append('mobile', document.getElementById('uMobile').value);
+  fd.append('email', document.getElementById('uEmail').value);
+  fd.append('password', document.getElementById('uPassword').value);
+  fd.append('role', role);
+  fd.append('permissions', JSON.stringify(perms));
+  const fileInput = document.getElementById('uProfileImage');
+  if(fileInput.files[0]) fd.append('profileImage', fileInput.files[0]);
+
+  if(!fd.get('username') || !fd.get('password')){ statusEl.textContent = 'Username and password required.'; return; }
+  statusEl.textContent = 'Creating...';
+  const res = await fetch(`${API}/api/admin/users`, { method:'POST', headers: authHeaders(false), body: fd });
+  const d = await res.json();
+  statusEl.textContent = res.ok ? 'Employee added.' : (d.error || 'Failed');
+  if(res.ok){
+    ['uName','uUsername','uMobile','uEmail','uPassword'].forEach(id=>document.getElementById(id).value='');
+    fileInput.value=''; document.querySelectorAll('.perm-check').forEach(c=>c.checked=false);
+    loadUsers();
+  }
+});
+async function toggleUserActive(id, active){
+  const fd = new FormData(); fd.append('active', active);
+  await fetch(`${API}/api/admin/users/${id}`, { method:'PATCH', headers: authHeaders(false), body: fd });
+  loadUsers();
+}
+async function delUser(id){
+  if(!confirm('Delete this user permanently?')) return;
+  const res = await fetch(`${API}/api/admin/users/${id}`, { method:'DELETE', headers: authHeaders() });
+  const d = await res.json();
+  if(!res.ok){ alert(d.error || 'Failed'); return; }
+  loadUsers();
+}
 </script>
 </body>
 </html>

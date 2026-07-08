@@ -9,7 +9,13 @@ const bookingSchema = new mongoose.Schema({
   day: { type: String, default: 'All 3 Days' },
   message: { type: String },
   status: { type: String, enum: ['pending', 'confirmed', 'cancelled'], default: 'pending' },
-  amount: { type: Number, default: 0 }, // set by admin when confirming, used for invoice
+
+  unitPrice: { type: Number, default: 0 },   // predefined price at time of booking (per pass/unit)
+  couponCode: { type: String, trim: true, uppercase: true },
+  discountAmount: { type: Number, default: 0 },
+  amount: { type: Number, default: 0 },      // final payable amount (admin/system can override)
+  amountIsManualOverride: { type: Boolean, default: false },
+
   invoiceNumber: { type: String },
   invoiceGeneratedAt: { type: Date },
   source: { type: String, default: 'website' }, // website / whatsapp / call / manual

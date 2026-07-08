@@ -3,8 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/png" href="/assets/kp_logo_png.png">
-<link rel="apple-touch-icon" href="/assets/kp_logo_png.png">
 <title>Kritiva Productions — Where We Celebrate</title>
 <meta name="description" content="Royal Garba Nights 2026 — Indore's most premium 3-day Navratri experience by Kritiva Productions.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -158,9 +156,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:cent
 .contact-item p{font-family:'Inter',sans-serif;font-size:14px;color:var(--ink-dim);margin-top:2px}
 .qr-box{border:1px solid var(--line);border-radius:8px;padding:30px;text-align:center}
 
-/* banners (dynamic promo) */
-#promo-banner-slot{margin-top:24px}
-#promo-banner-slot img{width:100%;border-radius:8px;border:1px solid var(--line)}
+/* banners (dynamic, admin managed) */
+.banner-slot{margin-top:24px}
+.banner-slot:empty{display:none}
+.banner-slot img{width:100%;border-radius:8px;border:1px solid var(--line);display:block}
 
 footer{border-top:1px solid var(--line);padding:50px 0;text-align:center;font-family:'Inter',sans-serif;font-size:12px;color:var(--ink-dim);position:relative;z-index:1}
 footer .fbrand{font-family:'Cormorant Garamond',serif;color:var(--gold-light);font-size:20px;margin-bottom:10px}
@@ -188,7 +187,7 @@ footer .fbrand{font-family:'Cormorant Garamond',serif;color:var(--gold-light);fo
 <div class="veil"></div>
 
 <nav id="mainnav">
-  <div class="brand"><img src="/assets/kp_logo_png.png" alt="Kritiva Productions" style="height:32px;width:auto"> KRITIVA PRODUCTIONS</div>
+  <div class="brand"><span class="kp">KP</span> KRITIVA PRODUCTIONS</div>
   <div class="navlinks">
     <a href="#about">About</a>
     <a href="#why">Why Us</a>
@@ -214,6 +213,7 @@ footer .fbrand{font-family:'Cormorant Garamond',serif;color:var(--gold-light);fo
     <a id="wa-hero" href="#" target="_blank" class="btn btn-wa">WhatsApp Us</a>
     <a href="tel:+919232532246" class="btn btn-ghost">Call Now</a>
   </div>
+  <div id="banner-hero-strip" class="banner-slot"></div>
   <div class="scroll-cue"><span>Scroll</span><div class="line"></div></div>
 </section>
 
@@ -222,7 +222,7 @@ footer .fbrand{font-family:'Cormorant Garamond',serif;color:var(--gold-light);fo
   <div class="eyebrow-row"><div class="dash"></div><span>About Us</span></div>
   <h2 class="sec-title">Where culture meets <em>class.</em></h2>
   <div class="about-grid">
-    <div class="about-badge"><img src="/assets/kp_logo_png.png" alt="KP" style="width:60%;height:auto"></div>
+    <div class="about-badge"><div class="kp2">KP</div></div>
     <div>
       <p class="sec-lede">We craft premium cultural experiences across Madhya Pradesh, specialising in HNI events that blend tradition with luxury.</p>
       <ul class="about-list">
@@ -268,7 +268,7 @@ footer .fbrand{font-family:'Cormorant Garamond',serif;color:var(--gold-light);fo
 
 <!-- PROMO BANNER (admin managed) -->
 <section id="promo" class="wrap">
-  <div id="promo-banner-slot"></div>
+  <div id="banner-promo-section" class="banner-slot"></div>
 </section>
 
 <!-- VENUE -->
@@ -304,6 +304,7 @@ footer .fbrand{font-family:'Cormorant Garamond',serif;color:var(--gold-light);fo
       <div class="row"><span class="dot" style="background:#3d0c0c"></span>10% NRI &amp; Influencers</div>
     </div>
   </div>
+  <div id="banner-venue-section" class="banner-slot"></div>
 </section>
 
 <!-- SPONSORSHIP -->
@@ -313,21 +314,21 @@ footer .fbrand{font-family:'Cormorant Garamond',serif;color:var(--gold-light);fo
   <div class="tiers" data-reveal>
     <div class="tier">
       <div class="badge">Silver Sponsor</div>
-      <div class="price">₹1,50,000</div>
+      <div class="price" data-price-for="Silver Sponsor">₹1,50,000</div>
       <div class="passes">10 Passes</div>
       <ul><li>LED Screen Branding</li><li>Event Mentions</li><li>Digital Promotions</li></ul>
       <a href="#booking" class="btn btn-ghost" style="width:100%;justify-content:center" data-plan="Silver Sponsor">Enquire</a>
     </div>
     <div class="tier featured">
       <div class="badge">Title Sponsor</div>
-      <div class="price">₹5,00,000</div>
+      <div class="price" data-price-for="Title Sponsor">₹5,00,000</div>
       <div class="passes">25 Passes</div>
       <ul><li>Naming Rights</li><li>Stage Branding</li><li>Anchor Mentions</li><li>Hoarding</li></ul>
       <a href="#booking" class="btn btn-gold" style="width:100%;justify-content:center" data-plan="Title Sponsor">Enquire</a>
     </div>
     <div class="tier">
       <div class="badge">Gold Sponsor</div>
-      <div class="price">₹3,00,000</div>
+      <div class="price" data-price-for="Gold Sponsor">₹3,00,000</div>
       <div class="passes">15 Passes</div>
       <ul><li>Co-Sponsor Title</li><li>Stall Space</li><li>Gate Branding</li><li>Social Media Tags</li></ul>
       <a href="#booking" class="btn btn-ghost" style="width:100%;justify-content:center" data-plan="Gold Sponsor">Enquire</a>
@@ -348,6 +349,7 @@ footer .fbrand{font-family:'Cormorant Garamond',serif;color:var(--gold-light);fo
       <div class="lbl">Estimated Package Value</div>
     </div>
   </div>
+  <div id="banner-sponsorship-section" class="banner-slot"></div>
 </section>
 
 <!-- BOOKING -->
@@ -374,6 +376,8 @@ footer .fbrand{font-family:'Cormorant Garamond',serif;color:var(--gold-light);fo
     <div class="field"><label>Preferred Day</label>
       <select name="day"><option>17 Oct 2026</option><option>18 Oct 2026</option><option>19 Oct 2026</option><option>All 3 Days</option></select>
     </div>
+    <div class="field"><label>Coupon Code (optional)</label><input type="text" name="couponCode" id="couponCodeInput" placeholder="e.g. EARLYBIRD10"></div>
+    <div class="field"><label>Estimated Total</label><div id="priceSummary" style="padding:14px 16px;border:1px solid var(--line);border-radius:4px;color:var(--gold-light);font-family:'Inter',sans-serif;font-size:14px">Select a plan to see price</div></div>
     <div class="field full"><label>Message</label><textarea name="message" placeholder="Any specific requirement..."></textarea></div>
     <div class="full booking-actions">
       <button type="submit" class="btn btn-gold">Submit Booking Request</button>
@@ -403,9 +407,9 @@ footer .fbrand{font-family:'Cormorant Garamond',serif;color:var(--gold-light);fo
   </div>
 </section>
 
+<div class="wrap"><div id="banner-footer-strip" class="banner-slot"></div></div>
 <footer>
-  <img src="/assets/kp_logo_png.png" alt="Kritiva Productions" style="height:40px;margin-bottom:12px">
-<div class="fbrand">KRITIVA PRODUCTIONS</div>
+  <div class="fbrand">KRITIVA PRODUCTIONS</div>
   <div>Where We Celebrate</div>
   <div style="margin-top:14px">© 2026 Kritiva Productions. All rights reserved.</div>
 </footer>
@@ -466,14 +470,65 @@ document.getElementById('bookingForm').addEventListener('submit', async (e)=>{
   }
 });
 
-/* ===== Load active promo banner from admin ===== */
-fetch(`${API_BASE}/api/banners/active`).then(r=>r.ok?r.json():null).then(data=>{
-  if(data && data.url){
-    document.getElementById('promo-banner-slot').innerHTML = `<img src="${data.url}" alt="${data.title||'Promotion'}">`;
-  } else {
-    document.getElementById('promo').style.display='none';
-  }
+/* ===== Load active banners for every placement ===== */
+fetch(`${API_BASE}/api/banners/active`).then(r=>r.ok?r.json():{}).then(grouped=>{
+  Object.keys(grouped).forEach(placement=>{
+    const slot = document.getElementById(`banner-${placement}`);
+    if(!slot) return;
+    const banners = grouped[placement];
+    if(!banners || !banners.length) return;
+    slot.innerHTML = banners.map(b => {
+      const img = `<img src="${b.url}" alt="${b.title||'Promotion'}">`;
+      return b.linkUrl ? `<a href="${b.linkUrl}" target="_blank" rel="noopener">${img}</a>` : img;
+    }).join('');
+  });
+  if(!Object.keys(grouped).some(p=>p==='promo-section')) document.getElementById('promo').style.display='none';
 }).catch(()=>{ document.getElementById('promo').style.display='none'; });
+
+/* ===== Predefined pricing: sponsorship tiers + booking form ===== */
+let PRICE_MAP = {};
+fetch(`${API_BASE}/api/pricing`).then(r=>r.ok?r.json():[]).then(prices=>{
+  prices.forEach(p => PRICE_MAP[p.planType] = p.price);
+  document.querySelectorAll('[data-price-for]').forEach(el=>{
+    const plan = el.dataset.priceFor;
+    if(PRICE_MAP[plan] !== undefined) el.textContent = '₹' + PRICE_MAP[plan].toLocaleString('en-IN');
+  });
+  updatePriceSummary();
+}).catch(()=>{});
+
+let lastCouponResult = null;
+async function updatePriceSummary(){
+  const f = document.getElementById('bookingForm');
+  const plan = f.planType.value;
+  const passes = Number(f.passes.value) || 1;
+  const summaryEl = document.getElementById('priceSummary');
+  if(!plan){ summaryEl.textContent = 'Select a plan to see price'; return; }
+  const unit = PRICE_MAP[plan] || 0;
+  let total = unit * passes;
+  let discountLine = '';
+  const code = document.getElementById('couponCodeInput').value.trim();
+  if(code){
+    try{
+      const res = await fetch(`${API_BASE}/api/coupons/validate`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({code, planType: plan})
+      });
+      const d = await res.json();
+      if(d.valid){
+        const discount = d.discountType==='flat' ? d.value : Math.round(total*(d.value/100));
+        total = Math.max(0, total - discount);
+        discountLine = ` <span style="color:#8fe6b0">(coupon applied, -₹${discount.toLocaleString('en-IN')})</span>`;
+        lastCouponResult = d;
+      } else {
+        discountLine = ` <span style="color:#e08080">(${d.error||'invalid coupon'})</span>`;
+        lastCouponResult = null;
+      }
+    }catch(e){ lastCouponResult = null; }
+  }
+  summaryEl.innerHTML = `₹${total.toLocaleString('en-IN')} for ${passes} × ${plan}${discountLine}`;
+}
+document.getElementById('planType').addEventListener('change', updatePriceSummary);
+document.querySelector('[name="passes"]').addEventListener('input', updatePriceSummary);
+document.getElementById('couponCodeInput').addEventListener('change', updatePriceSummary);
 
 /* ===== QR code (venue location) — simple generated via api ===== */
 document.getElementById('qr').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&color=d4af37&bgcolor=0a0705&data=${encodeURIComponent('https://maps.google.com/?q=Shekhar+Central+Palasia+Indore')}" alt="QR" style="border-radius:8px">`;

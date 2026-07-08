@@ -3,9 +3,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');
+
+// Defensive: make sure upload dirs exist even if git/deploy dropped empty folders.
+['banners', 'invoices', 'profiles'].forEach(dir => {
+  fs.mkdirSync(path.join(__dirname, 'uploads', dir), { recursive: true });
+});
 
 const app = express();
 

@@ -19,6 +19,16 @@ npm run seed:admin        # creates first admin login from .env values
 npm start                 # or: pm2 start server/server.js --name kritiva
 ```
 
+## What's new in this update
+- Fixed mail sending: booking confirmation + admin notify emails now `await` and `console.error()` on failure instead of swallowing silently — check your Render/PM2 logs, not the browser console, for mail issues.
+- Fixed 3D background: three.js r160 has no global `<script>` build, was causing `THREE is not defined`. Locked to r128.
+- Forgot password: math captcha → OTP emailed **only** to `kritivaproductions@gmail.com` (hardcoded in `admin.js`, not the requesting user's own email) → username+OTP+new password resets it. Also added a logged-in "Change Password" (needs current password).
+- Predefined pricing: `PriceConfig` collection drives sponsorship tier prices on the site AND auto-fills the amount on both the public booking form and admin manual-entry form. Admin can still override per-booking.
+- Discount coupons: create flat/percent codes, optional per-plan restriction, max uses, expiry. Public site validates + applies live on the booking form; admin can manage from the dashboard.
+- Banners: 5 placements now (hero-strip, promo-section, venue-section, sponsorship-section, footer-strip), each with its own suggested size and an optional click-through link.
+- Employee/user management: add staff with name, username, mobile, email, password, profile photo, role. `admin` role = full access always. `back-office` role = pick specific permissions (bookings/banners/pricing/coupons/mail/users) via checkboxes, enforced server-side in every admin route via `requirePermission()`.
+- Run `npm run seed:admin` again after pulling this update — it now also seeds default prices for each plan type (edit them from the Pricing tab afterward).
+
 ## Admin access
 - URL: `https://yourdomain.com/admin`
 - Not in nav, not in sitemap, blocked in robots.txt. Still gate it further at
