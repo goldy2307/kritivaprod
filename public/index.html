@@ -41,7 +41,7 @@ a{color:inherit;text-decoration:none}
 .veil{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 50% 20%,rgba(212,175,55,0.06),transparent 60%),linear-gradient(180deg,var(--bg) 0%,var(--bg-2) 100%);pointer-events:none}
 
 .wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 24px}
-section{position:relative;z-index:1;padding:120px 0}
+section{position:relative;z-index:1;padding:160px 0}
 
 /* nav */
 nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:18px 32px;backdrop-filter:blur(10px);background:linear-gradient(180deg,rgba(10,7,5,0.85),transparent);transition:background .3s}
@@ -107,7 +107,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:cent
 .card p{font-family:'Inter',sans-serif;font-size:13px;color:var(--ink-dim);margin-top:4px}
 
 /* why us */
-.why-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:50px}
+.why-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:50px;margin-bottom:10px}
 .why-grid .card{display:flex;gap:16px;align-items:flex-start}
 .why-grid .card .icon{flex:none;margin-bottom:0}
 
@@ -152,12 +152,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:cent
 .form-grid .full{grid-column:1/-1}
 .field label{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:8px}
 .field input,.field select,.field textarea{width:100%;background:rgba(255,255,255,0.02);border:1px solid var(--line);color:var(--ink);padding:14px 16px;border-radius:4px;font-family:'Inter',sans-serif;font-size:14px;outline:none;transition:border-color .3s}
-.field select{color-scheme:dark}
-.field option{background:#1a1410;color:var(--ink)}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
 .field textarea{resize:vertical;min-height:100px}
 .booking-actions{display:flex;gap:16px;margin-top:30px;flex-wrap:wrap;align-items:center}
 #form-status{font-family:'Inter',sans-serif;font-size:13px;margin-top:16px;color:var(--gold-light)}
+
 /* contact */
 .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:50px}
 .contact-item{display:flex;gap:16px;align-items:flex-start;margin-bottom:26px}
@@ -184,6 +183,7 @@ footer .fbrand{font-family:'Cormorant Garamond',serif;color:var(--gold-light);fo
   .about-grid,.why-grid,.stat-row,.tiers,.estimate-box,.contact-grid,.venue-stats{grid-template-columns:1fr}
   .navlinks,.nav-cta{display:none}
   .form-grid{grid-template-columns:1fr}
+  section{padding:90px 0}
 }
 @media (prefers-reduced-motion: reduce){
   .scroll-cue .line{animation:none}
@@ -203,6 +203,7 @@ footer .fbrand{font-family:'Cormorant Garamond',serif;color:var(--gold-light);fo
     <a href="#services">Services</a>
     <a href="#events">Events</a>
     <a href="#why">Why Us</a>
+    <a href="#venue">Venue</a>
     <a href="#sponsorship">Sponsorship</a>
     <a href="#booking">Booking</a>
     <a href="#contact">Contact</a>
@@ -305,7 +306,41 @@ footer .fbrand{font-family:'Cormorant Garamond',serif;color:var(--gold-light);fo
   <div id="banner-promo-section" class="banner-slot"></div>
 </section>
 
-
+<!-- VENUE -->
+<section id="venue" class="wrap">
+  <div class="eyebrow-row"><div class="dash"></div><span>Venue</span></div>
+  <h2 class="sec-title">Why <em>Blue Lotus?</em></h2>
+  <p class="sec-lede">Indore's most prestigious event destination.</p>
+  <div class="venue-media">
+    <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="lotusg" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stop-color="#f4e4bc"/><stop offset="100%" stop-color="#8b6914"/>
+      </linearGradient></defs>
+      <path d="M100 20 L100 70 M70 45 Q100 20 130 45 Q100 60 70 45Z" fill="none" stroke="url(#lotusg)" stroke-width="2"/>
+      <path d="M60 55 Q100 30 140 55 Q100 80 60 55Z" fill="none" stroke="url(#lotusg)" stroke-width="1.5" opacity="0.7"/>
+      <circle cx="100" cy="55" r="45" fill="none" stroke="#d4af37" stroke-width="0.5" opacity="0.5"/>
+    </svg>
+  </div>
+  <div class="venue-stats">
+    <div class="card"><div class="icon">★</div><h4>5-Star</h4><p>Banquet Experience</p></div>
+    <div class="card"><div class="icon">🚗</div><h4>1000+</h4><p>Car Parking</p></div>
+    <div class="card"><div class="icon">📍</div><h4>Prime Location</h4><p>HNI Crowd</p></div>
+  </div>
+  <div class="audience-pie">
+    <svg width="180" height="180" viewBox="0 0 42 42">
+      <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#1a1206" stroke-width="6"></circle>
+      <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#d4af37" stroke-width="6" stroke-dasharray="70 30" stroke-dashoffset="25" transform="rotate(-90 21 21)"></circle>
+      <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#8b6914" stroke-width="6" stroke-dasharray="20 80" stroke-dashoffset="-45" transform="rotate(-90 21 21)"></circle>
+      <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#3d0c0c" stroke-width="6" stroke-dasharray="10 90" stroke-dashoffset="-65" transform="rotate(-90 21 21)"></circle>
+    </svg>
+    <div class="legend">
+      <div class="row"><span class="dot" style="background:#d4af37"></span>70% HNI Families &amp; Youth (18–35)</div>
+      <div class="row"><span class="dot" style="background:#8b6914"></span>20% Corporate Crowd</div>
+      <div class="row"><span class="dot" style="background:#3d0c0c"></span>10% NRI &amp; Influencers</div>
+    </div>
+  </div>
+  <div id="banner-venue-section" class="banner-slot"></div>
+</section>
 
 <!-- SPONSORSHIP -->
 <section id="sponsorship" class="wrap">
