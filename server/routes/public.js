@@ -24,7 +24,7 @@ router.post('/bookings', async (req, res) => {
       ],
       ctaText: 'Visit Website',
       ctaUrl: process.env.SITE_URL
-    }).catch(()=>{});
+    }).catch(err => console.error('MAIL ERROR (customer):', err.message));
 
     sendMail({
       to: process.env.ADMIN_NOTIFY_EMAIL,
