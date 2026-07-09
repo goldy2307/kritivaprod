@@ -32,7 +32,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Block search engines from the admin path
 app.get('/robots.txt', (req, res) => {
-  res.type('text/plain').send('User-agent: *\nDisallow: /admin\nDisallow: /api/admin\n');
+  res.type('text/plain').send('User-agent: *\nDisallow: /admin\nDisallow: /api/admin\n\nSitemap: https://kritivaproductions.com/sitemap.xml\n');
 });
 
 // API routes

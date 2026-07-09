@@ -677,23 +677,55 @@ router.delete('/users/:id', requireAuth, requirePermission('users'), async (req,
   res.json({ ok: true });
 });
 
-/* ================= HERO SECTION ================= */
+/* ================= HERO SLIDES ================= */
 const uploadHeroImage = memoryUpload(5);
 
 router.get('/hero', requireAuth, requirePermission('banners'), async (req, res) => {
-  let hero = await Hero.findOne({ key: 'main' });
-  if (!hero) hero = await Hero.create({ key: 'main' });
-  res.json(hero);
+  const slides = await Hero.find().sort({ order: 1, createdAt: 1 });
+  res.json(slides);
 });
 
-router.put('/hero', requireAuth, requirePermission('banners'), uploadHeroImage.single('backgroundImage'), async (req, res) => {
+router.post('/hero', requireAuth, requirePermission('banners'), uploadHeroImage.single('backgroundImage'), async (req, res) => {
   try {
-    const existing = await Hero.findOne({ key: 'main' });
+    const doc = {
+      titleLine1: req.body.titleLine1 || '',
+      titleLine2: req.body.titleLine2 || '',
+      subtitle: req.body.subtitle || '',
+      primaryCtaText: req.body.primaryCtaText || '',
+      primaryCtaLink: req.body.primaryCtaLink || '',
+      backgroundStyle: req.body.backgroundStyle || 'default',
+      showWhatsappCta: req.body.showWhatsappCta === 'false' ? false : true,
+      order: Number(req.body.order) || 0,
+      active: req.body.active === 'false' ? false : true
+    };
+    if (req.body.dateBadges !== undefined) {
+      try { doc.dateBadges = JSON.parse(req.body.dateBadges); } catch (_) { doc.dateBadges = []; }
+    }
+    if (req.file) {
+      const uploaded = await uploadBufferToCloudinary(req.file.buffer, 'hero');
+      doc.backgroundImage = uploaded.secure_url;
+      doc.backgroundImageCloudinaryId = uploaded.public_id;
+    }
+    const slide = await Hero.create(doc);
+    res.status(201).json(slide);
+  } catch (err) {
+    console.error('HERO CREATE ERROR:', err);
+    res.status(500).json({ error: err.message || 'Server error' });
+  }
+});
+
+router.patch('/hero/:id', requireAuth, requirePermission('banners'), uploadHeroImage.single('backgroundImage'), async (req, res) => {
+  try {
+    const existing = await Hero.findById(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Not found' });
+
     const update = { updatedAt: new Date() };
     ['titleLine1', 'titleLine2', 'subtitle', 'primaryCtaText', 'primaryCtaLink', 'backgroundStyle'].forEach(f => {
       if (req.body[f] !== undefined) update[f] = req.body[f];
     });
     if (req.body.showWhatsappCta !== undefined) update.showWhatsappCta = req.body.showWhatsappCta === 'true' || req.body.showWhatsappCta === true;
+    if (req.body.active !== undefined) update.active = req.body.active === 'true' || req.body.active === true;
+    if (req.body.order !== undefined) update.order = Number(req.body.order) || 0;
     if (req.body.dateBadges !== undefined) {
       try { update.dateBadges = JSON.parse(req.body.dateBadges); } catch (_) { update.dateBadges = []; }
     }
@@ -701,14 +733,20 @@ router.put('/hero', requireAuth, requirePermission('banners'), uploadHeroImage.s
       const uploaded = await uploadBufferToCloudinary(req.file.buffer, 'hero');
       update.backgroundImage = uploaded.secure_url;
       update.backgroundImageCloudinaryId = uploaded.public_id;
-      if (existing && existing.backgroundImageCloudinaryId) deleteFromCloudinary(existing.backgroundImageCloudinaryId);
+      if (existing.backgroundImageCloudinaryId) deleteFromCloudinary(existing.backgroundImageCloudinaryId);
     }
-    const hero = await Hero.findOneAndUpdate({ key: 'main' }, update, { new: true, upsert: true });
-    res.json(hero);
+    const slide = await Hero.findByIdAndUpdate(req.params.id, update, { new: true });
+    res.json(slide);
   } catch (err) {
     console.error('HERO UPDATE ERROR:', err);
     res.status(500).json({ error: err.message || 'Server error' });
   }
+});
+
+router.delete('/hero/:id', requireAuth, requirePermission('banners'), async (req, res) => {
+  const slide = await Hero.findByIdAndDelete(req.params.id);
+  if (slide && slide.backgroundImageCloudinaryId) deleteFromCloudinary(slide.backgroundImageCloudinaryId);
+  res.json({ ok: true });
 });
 
 module.exports = router;

@@ -7,10 +7,10 @@ const Event = require('../models/Event');
 const Hero = require('../models/Hero');
 const { sendMail } = require('../utils/mailer');
 
-/* ---------- Hero section content (public, read-only) ---------- */
+/* ---------- Hero slides (public, read-only) — auto-rotating carousel ---------- */
 router.get('/hero', async (req, res) => {
-  const hero = await Hero.findOne({ key: 'main' });
-  res.json(hero || {});
+  const slides = await Hero.find({ active: true }).sort({ order: 1, createdAt: 1 });
+  res.json(slides);
 });
 
 /* ---------- Listed events (public) ---------- */
