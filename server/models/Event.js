@@ -17,7 +17,8 @@ const eventSchema = new mongoose.Schema({
   startDate: { type: Date },
   endDate: { type: Date },
   location: { type: String, trim: true },
-  image: { type: String },                     // /uploads/events/xxx.jpg
+  image: { type: String },                     // Cloudinary secure_url (or /uploads/events/xxx.jpg legacy)
+  imageCloudinaryId: { type: String },
   packages: { type: [packageSchema], default: [] },
   status: { type: String, enum: ['upcoming', 'past', 'draft'], default: 'upcoming' },
   listed: { type: Boolean, default: true },    // shown on the public site / bookable via Reserve Now

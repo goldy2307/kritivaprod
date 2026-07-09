@@ -11,6 +11,7 @@ const bookingSchema = new mongoose.Schema({
   day: { type: String, default: 'All 3 Days' },
   message: { type: String },
   status: { type: String, enum: ['pending', 'confirmed', 'cancelled'], default: 'pending' },
+  paymentStatus: { type: String, enum: ['unpaid', 'partial', 'paid', 'refunded'], default: 'unpaid' },
 
   unitPrice: { type: Number, default: 0 },   // predefined price at time of booking (per pass/unit)
   couponCode: { type: String, trim: true, uppercase: true },

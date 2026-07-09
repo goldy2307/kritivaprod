@@ -8,7 +8,8 @@ const adminSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true },
   email: { type: String, trim: true },
   mobile: { type: String, trim: true },
-  profileImage: { type: String }, // /uploads/profiles/xxx.jpg
+  profileImage: { type: String }, // Cloudinary secure_url (or /uploads/profiles/xxx.jpg legacy)
+  profileImageCloudinaryId: { type: String },
   // 'admin' is a built-in super-role (full access, see middleware/auth.js).
   // Any other value must match a Role document name (see models/Role.js).
   role: { type: String, default: 'back-office', trim: true },

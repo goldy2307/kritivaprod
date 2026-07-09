@@ -29,7 +29,26 @@ npm start                 # or: pm2 start server/server.js --name kritiva
 - Employee/user management: add staff with name, username, mobile, email, password, profile photo, role. `admin` role = full access always. `back-office` role = pick specific permissions (bookings/banners/pricing/coupons/mail/users) via checkboxes, enforced server-side in every admin route via `requirePermission()`.
 - Run `npm run seed:admin` again after pulling this update — it now also seeds default prices for each plan type (edit them from the Pricing tab afterward).
 
-## Admin access
+## What's new (this update)
+- **Cloudinary for image uploads** — banners, event covers, and profile photos now upload straight to Cloudinary instead of local disk. This is the fix for "uploaded banners disappear": Hostinger/most PaaS hosts wipe `server/uploads/*` on every redeploy/restart since it's not part of the git-tracked build, so anything saved there only survives until the next deploy. Set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` in `.env` (free tier is enough). If these are left blank the server still boots, but new image uploads will fail — check the startup log line ("Cloudinary: configured" / "NOT configured").
+- **Banner display bug fixed** — the public banner endpoint used to always rebuild the image URL from `req.protocol` + host, which silently downgraded to `http://` behind a reverse proxy that doesn't forward `X-Forwarded-Proto`, and the browser then blocked it as mixed content. Cloudinary URLs are absolute + https already, so this class of bug is gone for anything uploaded from now on.
+- **QR code fixed** — was calling `api.qrserver.com` client-side; if that domain was slow/blocked (ad-blockers commonly block "qr" generator domains) the box stayed empty. Now generated locally with `qrcode.js` (cdnjs), with a text-link fallback if the script itself fails to load.
+- **Booking actions overhauled** — table now has a *Payment Status* column (unpaid/partial/paid/refunded) separate from booking status (pending/confirmed/cancelled). Actions column: **View** (opens a print-friendly booking detail page — use the browser's Print → Save as PDF), **Edit** (full field edit incl. status + payment status), **Invoice** (generate/download, optional email), **Mail Invoice** (re-send an already-generated invoice without regenerating it), **Delete**.
+- **Mail sending diagnostics** — `sendMail()` now throws a specific error if `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS` are missing instead of failing deep inside nodemailer. Server startup now calls `transporter.verify()` and logs exactly why SMTP is broken (bad host/port/secure mismatch, bad auth, etc). The admin UI now surfaces the *actual* mail error (e.g. "Invalid login: 535-5.7.8" for a bad Gmail app password) instead of a generic "failed". If you're on Gmail: use an **App Password** (not your normal password), `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_SECURE=true` — or `SMTP_PORT=587`, `SMTP_SECURE=false`.
+- **Banner edit** — banners can now be edited in place (title/placement/link, optionally swap the image) instead of delete-and-reupload.
+- **Hero section CMS** — new "Hero Section" admin tab controls the homepage hero: title lines, subtitle, date/location badges, primary button text+link, WhatsApp button visibility, and background style (default / solid dark / gold gradient / custom image). Public homepage fetches `/api/hero` and overrides the hardcoded defaults only for fields that are actually set.
+- **Event edit** — events can now be edited (all fields + packages + swap cover image), not just hidden/deleted.
+- **User edit** — employees can be edited (name/mobile/email/role/permissions/profile photo) and have their password reset directly from Manage Users, not just disabled/deleted.
+- **Role edit** — role label and permission set can be edited in place; changes propagate to every user on that role immediately (as before).
+- **My Profile** — new self-service tab for the logged-in admin/employee to view all their own account details and edit name/mobile/email/profile photo.
+
+## Cloudinary setup
+1. Create a free account at cloudinary.com, grab Cloud Name / API Key / API Secret from the console dashboard.
+2. Put them in `.env` as `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`.
+3. Restart the server. Check the log for "Cloudinary: configured".
+4. Existing images already on local disk (`server/uploads/*`) keep working via the legacy `/uploads/...` path — nothing breaks — but re-upload/re-save them once (edit banner/event/profile and pick a new file) to migrate to Cloudinary so they survive future redeploys.
+
+
 - URL: `https://yourdomain.com/admin`
 - Not in nav, not in sitemap, blocked in robots.txt. Still gate it further at
   Hostinger/Nginx level with HTTP Basic Auth on `/admin` if you want a second layer.

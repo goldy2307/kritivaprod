@@ -11,7 +11,8 @@ const PLACEMENTS = [
 
 const bannerSchema = new mongoose.Schema({
   title: { type: String },
-  url: { type: String, required: true }, // /uploads/banners/xxx.jpg
+  url: { type: String, required: true }, // Cloudinary secure_url (or /uploads/banners/xxx.jpg legacy)
+  cloudinaryId: { type: String }, // Cloudinary public_id, used to delete the asset
   placement: { type: String, enum: PLACEMENTS, default: 'promo-section' },
   linkUrl: { type: String }, // optional click-through link
   active: { type: Boolean, default: false },

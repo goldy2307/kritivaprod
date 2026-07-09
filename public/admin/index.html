@@ -115,6 +115,16 @@ tr:last-child td{border-bottom:none}
 .checkbox-grid input{width:auto}
 .avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--line)}
 .avatar-placeholder{width:34px;height:34px;border-radius:50%;background:#2a2418;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:12px}
+.modal-wide{max-width:560px;max-height:86vh;overflow-y:auto}
+.modal-wide .field{margin-bottom:14px}
+.modal-close-x{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer}
+.pay-unpaid{background:#4a3c1a;color:#e0c060}
+.pay-partial{background:#3a2e4a;color:#c6a0e0}
+.pay-paid{background:#1a4a2a;color:#6fd18a}
+.pay-refunded{background:#4a1a1a;color:#e08080}
+.profile-card{display:flex;gap:24px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:24px;margin-bottom:20px}
+.profile-card .avatar-lg{width:88px;height:88px;border-radius:50%;object-fit:cover;border:2px solid var(--gold)}
+.profile-card .avatar-lg-placeholder{width:88px;height:88px;border-radius:50%;background:#2a2418;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:32px;border:2px solid var(--gold)}
 </style>
 </head>
 <body>
@@ -178,6 +188,16 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<!-- GENERIC EDIT MODAL (content injected by JS per entity type) -->
+<div id="editModal" class="modal-overlay hidden">
+  <div class="modal modal-wide" style="position:relative">
+    <button type="button" class="modal-close-x" id="editModalClose">✕</button>
+    <h3 id="editModalTitle">Edit</h3>
+    <div id="editModalBody"></div>
+    <div class="modal-status" id="editModalStatus"></div>
+  </div>
+</div>
+
 <!-- DASHBOARD -->
 <div id="dashView" class="hidden">
   <div class="sidebar">
@@ -189,10 +209,12 @@ tr:last-child td{border-bottom:none}
     <div class="navitem" data-view="pricing">Pricing &amp; Sponsorship</div>
     <div class="navitem" data-view="coupons">Discount Coupons</div>
     <div class="navitem" data-view="banners">Banners</div>
+    <div class="navitem" data-view="hero">Hero Section</div>
     <div class="navitem" data-view="events">Events</div>
     <div class="navitem" data-view="mail">Send Mail</div>
     <div class="navitem" data-view="users">Manage Users</div>
     <div class="navitem" data-view="roles">Manage Roles</div>
+    <div class="navitem" data-view="profile">My Profile</div>
     <div class="logout">
       <button class="btn btn-outline" id="changePassBtn" style="width:100%">Change Password</button>
       <button class="btn btn-outline" id="logoutBtn" style="width:100%">Log Out</button>
@@ -245,7 +267,7 @@ tr:last-child td{border-bottom:none}
         <button class="btn btn-outline btn-sm" id="applyFilters">Filter</button>
       </div>
       <table>
-        <thead><tr><th>Name</th><th>Phone</th><th>Plan</th><th>Passes</th><th>Day</th><th>Status</th><th>Amount</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Name</th><th>Phone</th><th>Plan</th><th>Passes</th><th>Day</th><th>Status</th><th>Payment</th><th>Amount</th><th>Actions</th></tr></thead>
         <tbody id="bookingsBody"></tbody>
       </table>
     </section>
@@ -300,6 +322,39 @@ tr:last-child td{border-bottom:none}
         All: JPG/PNG, under 500KB, keep key text in center 80% for mobile safety.
       </div>
       <div class="banner-grid" id="bannerGrid"></div>
+    </section>
+
+    <!-- HERO SECTION -->
+    <section id="view-hero" class="hidden">
+      <h1 class="page-title">Hero Section</h1>
+      <p style="color:var(--dim);font-size:13px;margin-top:-14px">Controls the big homepage banner (title, dates, buttons, background). Leave a field blank to keep the site's default.</p>
+      <div class="card-box">
+        <div class="upload-box" style="grid-template-columns:repeat(2,1fr)">
+          <div class="field"><label>Title Line 1</label><input type="text" id="hTitle1" placeholder="e.g. Royal Garba"></div>
+          <div class="field"><label>Title Line 2</label><input type="text" id="hTitle2" placeholder="e.g. Nights 2026"></div>
+          <div class="field"><label>Subtitle</label><input type="text" id="hSubtitle" placeholder="e.g. An Evening of Culture, Elegance & Tradition"></div>
+          <div class="field"><label>Primary Button Text</label><input type="text" id="hCtaText" placeholder="e.g. Book Your Passes"></div>
+          <div class="field"><label>Primary Button Link</label><input type="text" id="hCtaLink" placeholder="e.g. #booking"></div>
+          <div class="field"><label>Show WhatsApp Button?</label>
+            <select id="hShowWA"><option value="true">Yes</option><option value="false">No</option></select>
+          </div>
+          <div class="field"><label>Background Style</label>
+            <select id="hBgStyle">
+              <option value="default">Default</option>
+              <option value="dark">Solid Dark</option>
+              <option value="gradient-gold">Gold Gradient</option>
+              <option value="image">Custom Background Image</option>
+            </select>
+          </div>
+          <div class="field"><label>Background Image (used when style = Custom)</label><input type="file" id="hBgImage" accept="image/*"></div>
+        </div>
+        <h4 style="color:var(--gold-l)">Date / Location Badges</h4>
+        <div id="hBadgesRows"></div>
+        <button class="btn btn-outline btn-sm" id="addBadgeRowBtn" type="button" style="width:auto;margin-bottom:14px">+ Add Badge</button>
+        <br>
+        <button class="btn btn-gold" id="saveHeroBtn" style="width:auto">Save Hero Section</button>
+        <div id="heroStatus"></div>
+      </div>
     </section>
 
     <!-- EVENTS -->
@@ -404,6 +459,24 @@ tr:last-child td{border-bottom:none}
         <tbody id="rolesBody"></tbody>
       </table>
     </section>
+
+    <!-- MY PROFILE -->
+    <section id="view-profile" class="hidden">
+      <h1 class="page-title">My Profile</h1>
+      <div class="profile-card" id="profileCard"></div>
+      <div class="card-box">
+        <h4 style="margin-top:0;color:var(--gold-l)">Edit Details</h4>
+        <div class="upload-box" style="grid-template-columns:repeat(2,1fr)">
+          <div class="field"><label>Full Name</label><input type="text" id="pName"></div>
+          <div class="field"><label>Mobile</label><input type="text" id="pMobile"></div>
+          <div class="field"><label>Email</label><input type="email" id="pEmail"></div>
+          <div class="field"><label>New Profile Photo</label><input type="file" id="pProfileImage" accept="image/*"></div>
+        </div>
+        <button class="btn btn-gold" id="saveProfileBtn" style="width:auto">Save Changes</button>
+        <button class="btn btn-outline" id="profileChangePassBtn" style="width:auto;margin-left:10px">Change Password</button>
+        <div id="profileStatus"></div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -435,7 +508,7 @@ function showDash(){
   document.getElementById('loginView').classList.add('hidden');
   document.getElementById('dashView').classList.remove('hidden');
   document.getElementById('whoami').textContent = localStorage.getItem('kp_user') || '';
-  loadOverview(); loadBookings(); loadPricingForm(); loadCoupons(); loadBanners(); loadEventsAdmin(); loadUsers(); loadRoles();
+  loadOverview(); loadBookings(); loadPricingForm(); loadCoupons(); loadBanners(); loadHero(); loadEventsAdmin(); loadUsers(); loadRoles(); loadProfile();
 }
 function showLogin(){
   document.getElementById('dashView').classList.add('hidden');
@@ -610,6 +683,7 @@ async function loadBookings(){
   const res = await fetch(`${API}/api/admin/bookings?${params}`, { headers: authHeaders() });
   if(res.status===401) return showLogin();
   const rows = await res.json();
+  window.BOOKINGS_CACHE = rows;
   const body = document.getElementById('bookingsBody');
   body.innerHTML = rows.map(b => `
     <tr>
@@ -619,18 +693,16 @@ async function loadBookings(){
       <td>${b.passes||1}</td>
       <td>${b.day||'-'}</td>
       <td><span class="status-pill status-${b.status}">${b.status}</span></td>
+      <td><span class="status-pill pay-${b.paymentStatus||'unpaid'}">${b.paymentStatus||'unpaid'}</span></td>
       <td>₹${(b.amount||0).toLocaleString('en-IN')}${b.discountAmount?` <small style="color:var(--dim)">(-₹${b.discountAmount})</small>`:''}</td>
       <td class="row-actions">
-        <select onchange="updateStatus('${b._id}',this.value)">
-          <option value="">Set Status</option>
-          <option value="pending" ${b.status==='pending'?'selected':''}>Pending</option>
-          <option value="confirmed" ${b.status==='confirmed'?'selected':''}>Confirmed</option>
-          <option value="cancelled" ${b.status==='cancelled'?'selected':''}>Cancelled</option>
-        </select>
+        <button class="btn btn-sm btn-outline" onclick="viewBooking('${b._id}')">View</button>
+        <button class="btn btn-sm btn-outline" onclick="editBooking('${b._id}')">Edit</button>
         <button class="btn btn-sm btn-outline" onclick="genInvoice('${b._id}', ${b.amount||0})">Invoice</button>
+        ${b.invoiceNumber ? `<button class="btn btn-sm btn-outline" onclick="mailExistingInvoice('${b._id}')">Mail Invoice</button>` : ''}
         <button class="btn btn-sm btn-danger" onclick="delBooking('${b._id}')">Delete</button>
       </td>
-    </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--dim)">No bookings yet</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--dim)">No bookings yet</td></tr>';
 }
 document.getElementById('applyFilters').addEventListener('click', loadBookings);
 
@@ -653,10 +725,116 @@ async function genInvoice(id, currentAmount){
   });
   const d = await res.json();
   if(res.ok){
-    alert(`Invoice ${d.invoiceNumber} generated${d.emailed?' and emailed':''}.`);
+    let msg = `Invoice ${d.invoiceNumber} generated.`;
+    if(sendEmail){
+      msg += d.emailed ? ' Emailed to customer.' : ` Email FAILED: ${d.mailError || 'unknown error'}`;
+    }
+    alert(msg);
     window.open(`${API}${d.downloadUrl}`, '_blank');
     loadBookings(); loadOverview();
   } else { alert(d.error || 'Failed'); }
+}
+async function mailExistingInvoice(id){
+  if(!confirm('Re-send the existing invoice PDF to this customer\'s email?')) return;
+  const res = await fetch(`${API}/api/admin/bookings/${id}/invoice/mail`, { method:'POST', headers: authHeaders() });
+  const d = await res.json();
+  alert(res.ok ? 'Invoice emailed.' : `Failed: ${d.error || 'unknown error'}`);
+}
+
+/* ---------- booking: edit modal ---------- */
+function openEditModal(title){
+  document.getElementById('editModalTitle').textContent = title;
+  document.getElementById('editModalStatus').textContent = '';
+  document.getElementById('editModal').classList.remove('hidden');
+}
+function closeEditModal(){ document.getElementById('editModal').classList.add('hidden'); }
+document.getElementById('editModalClose').addEventListener('click', closeEditModal);
+
+function editBooking(id){
+  const b = (window.BOOKINGS_CACHE||[]).find(x=>x._id===id);
+  if(!b) return;
+  openEditModal('Edit Booking');
+  document.getElementById('editModalBody').innerHTML = `
+    <div class="field"><label>Name</label><input type="text" id="ebName" value="${b.name||''}"></div>
+    <div class="field"><label>Phone</label><input type="text" id="ebPhone" value="${b.phone||''}"></div>
+    <div class="field"><label>Email</label><input type="email" id="ebEmail" value="${b.email||''}"></div>
+    <div class="field"><label>Plan</label><input type="text" id="ebPlan" value="${b.planType||''}"></div>
+    <div class="field"><label>Passes</label><input type="number" id="ebPasses" value="${b.passes||1}" min="1"></div>
+    <div class="field"><label>Day</label><input type="text" id="ebDay" value="${b.day||''}"></div>
+    <div class="field"><label>Amount (INR)</label><input type="number" id="ebAmount" value="${b.amount||0}"></div>
+    <div class="field"><label>Status</label>
+      <select id="ebStatus">
+        <option value="pending" ${b.status==='pending'?'selected':''}>Pending</option>
+        <option value="confirmed" ${b.status==='confirmed'?'selected':''}>Confirmed</option>
+        <option value="cancelled" ${b.status==='cancelled'?'selected':''}>Cancelled</option>
+      </select>
+    </div>
+    <div class="field"><label>Payment Status</label>
+      <select id="ebPayStatus">
+        <option value="unpaid" ${(b.paymentStatus||'unpaid')==='unpaid'?'selected':''}>Unpaid</option>
+        <option value="partial" ${b.paymentStatus==='partial'?'selected':''}>Partial</option>
+        <option value="paid" ${b.paymentStatus==='paid'?'selected':''}>Paid</option>
+        <option value="refunded" ${b.paymentStatus==='refunded'?'selected':''}>Refunded</option>
+      </select>
+    </div>
+    <div class="field"><label>Message</label><textarea id="ebMessage" rows="2">${b.message||''}</textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-gold" id="ebSaveBtn">Save Changes</button>
+      <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+    </div>`;
+  document.getElementById('ebSaveBtn').addEventListener('click', async ()=>{
+    const statusEl = document.getElementById('editModalStatus');
+    statusEl.textContent = 'Saving...';
+    const payload = {
+      name: document.getElementById('ebName').value,
+      phone: document.getElementById('ebPhone').value,
+      email: document.getElementById('ebEmail').value,
+      planType: document.getElementById('ebPlan').value,
+      passes: Number(document.getElementById('ebPasses').value) || 1,
+      day: document.getElementById('ebDay').value,
+      amount: Number(document.getElementById('ebAmount').value) || 0,
+      status: document.getElementById('ebStatus').value,
+      paymentStatus: document.getElementById('ebPayStatus').value,
+      message: document.getElementById('ebMessage').value
+    };
+    const res = await fetch(`${API}/api/admin/bookings/${id}`, { method:'PATCH', headers: authHeaders(), body: JSON.stringify(payload) });
+    const d = await res.json();
+    if(res.ok){ closeEditModal(); loadBookings(); loadOverview(); }
+    else statusEl.textContent = d.error || 'Failed to save';
+  });
+}
+
+/* ---------- booking: elaborate view (print-friendly, "Save as PDF" via browser print) ---------- */
+function viewBooking(id){
+  const b = (window.BOOKINGS_CACHE||[]).find(x=>x._id===id);
+  if(!b) return;
+  const w = window.open('', '_blank');
+  const rows = [
+    ['Booking ID', b._id], ['Name', b.name], ['Phone', b.phone], ['Email', b.email||'-'],
+    ['Event', b.eventTitle||'-'], ['Plan', b.planType], ['Passes', b.passes||1], ['Day', b.day||'-'],
+    ['Status', b.status], ['Payment Status', b.paymentStatus||'unpaid'],
+    ['Unit Price', `Rs. ${(b.unitPrice||0).toLocaleString('en-IN')}`],
+    ['Discount', b.discountAmount ? `Rs. ${b.discountAmount.toLocaleString('en-IN')} (${b.couponCode||''})` : '-'],
+    ['Amount Payable', `Rs. ${(b.amount||0).toLocaleString('en-IN')}`],
+    ['Invoice No.', b.invoiceNumber || 'Not generated yet'],
+    ['Source', b.source||'-'], ['Message', b.message||'-'],
+    ['Created', b.createdAt ? new Date(b.createdAt).toLocaleString('en-IN') : '-']
+  ];
+  w.document.write(`<!DOCTYPE html><html><head><title>Booking — ${b.name}</title>
+    <style>
+      body{font-family:Georgia,serif;background:#fff;color:#111;padding:40px;max-width:700px;margin:0 auto}
+      h1{color:#8b6914;font-size:22px;border-bottom:2px solid #d4af37;padding-bottom:10px}
+      table{width:100%;border-collapse:collapse;margin-top:20px}
+      td{padding:10px 8px;border-bottom:1px solid #eee;font-size:14px}
+      td:first-child{color:#666;width:200px;font-weight:bold}
+      .print-btn{margin-top:24px;padding:10px 20px;background:#d4af37;border:none;border-radius:4px;cursor:pointer;font-size:13px}
+      @media print{.print-btn{display:none}}
+    </style></head><body>
+    <h1>Kritiva Productions — Booking Details</h1>
+    <table>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>
+    <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+    </body></html>`);
+  w.document.close();
 }
 
 /* ---------- pricing ---------- */
@@ -741,9 +919,10 @@ async function loadBanners(){
   const res = await fetch(`${API}/api/admin/banners`, { headers: authHeaders() });
   if(res.status===401) return;
   const { banners } = await res.json();
+  window.BANNERS_CACHE = banners;
   document.getElementById('bannerGrid').innerHTML = banners.map(b => `
     <div class="banner-card">
-      <img src="${API}${b.url}">
+      <img src="${b.url.startsWith('http')?b.url:API+b.url}">
       <div class="body">
         <strong>${b.title||'Untitled'}</strong>
         <p>${b.placement}</p>
@@ -752,10 +931,42 @@ async function loadBanners(){
           ${b.active
             ? `<button class="btn btn-sm btn-outline" onclick="toggleBanner('${b._id}',false)">Deactivate</button>`
             : `<button class="btn btn-sm btn-ok" onclick="toggleBanner('${b._id}',true)">Activate</button>`}
+          <button class="btn btn-sm btn-outline" onclick="editBanner('${b._id}')">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="delBanner('${b._id}')">Delete</button>
         </div>
       </div>
     </div>`).join('') || '<p style="color:var(--dim)">No banners uploaded yet</p>';
+}
+function editBanner(id){
+  const b = (window.BANNERS_CACHE||[]).find(x=>x._id===id);
+  if(!b) return;
+  openEditModal('Edit Banner');
+  const labels = {'hero-strip':'Hero Strip','promo-section':'Promo Section','venue-section':'Venue Section','sponsorship-section':'Sponsorship Section','footer-strip':'Footer Strip'};
+  document.getElementById('editModalBody').innerHTML = `
+    <div class="field"><label>Title</label><input type="text" id="ebnTitle" value="${b.title||''}"></div>
+    <div class="field"><label>Placement</label>
+      <select id="ebnPlacement">${Object.keys(labels).map(k=>`<option value="${k}" ${b.placement===k?'selected':''}>${labels[k]}</option>`).join('')}</select>
+    </div>
+    <div class="field"><label>Click-through Link</label><input type="text" id="ebnLink" value="${b.linkUrl||''}"></div>
+    <div class="field"><label>Replace Image (optional)</label><input type="file" id="ebnFile" accept="image/*"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gold" id="ebnSaveBtn">Save Changes</button>
+      <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+    </div>`;
+  document.getElementById('ebnSaveBtn').addEventListener('click', async ()=>{
+    const statusEl = document.getElementById('editModalStatus');
+    statusEl.textContent = 'Saving...';
+    const fd = new FormData();
+    fd.append('title', document.getElementById('ebnTitle').value);
+    fd.append('placement', document.getElementById('ebnPlacement').value);
+    fd.append('linkUrl', document.getElementById('ebnLink').value);
+    const fileInput = document.getElementById('ebnFile');
+    if(fileInput.files[0]) fd.append('banner', fileInput.files[0]);
+    const res = await fetch(`${API}/api/admin/banners/${id}`, { method:'PATCH', headers: authHeaders(false), body: fd });
+    const d = await res.json();
+    if(res.ok){ closeEditModal(); loadBanners(); }
+    else statusEl.textContent = d.error || 'Failed to save';
+  });
 }
 async function toggleBanner(id, activate){
   await fetch(`${API}/api/admin/banners/${id}/${activate?'activate':'deactivate'}`, { method:'PATCH', headers: authHeaders() });
@@ -824,9 +1035,10 @@ async function loadEventsAdmin(){
   const res = await fetch(`${API}/api/admin/events`, { headers: authHeaders() });
   if(res.status===401) return;
   const events = await res.json();
+  window.EVENTS_CACHE = events;
   document.getElementById('eventsAdminGrid').innerHTML = events.map(ev => `
     <div class="banner-card">
-      ${ev.image ? `<img src="${API}${ev.image}">` : ''}
+      ${ev.image ? `<img src="${ev.image.startsWith('http')?ev.image:API+ev.image}">` : ''}
       <div class="body">
         <strong>${ev.title}</strong>
         <p>${ev.category||'-'} · ${ev.status}</p>
@@ -837,10 +1049,66 @@ async function loadEventsAdmin(){
           ${ev.listed
             ? `<button class="btn btn-sm btn-outline" onclick="toggleEventListed('${ev._id}',false)">Hide</button>`
             : `<button class="btn btn-sm btn-ok" onclick="toggleEventListed('${ev._id}',true)">List</button>`}
+          <button class="btn btn-sm btn-outline" onclick="editEvent('${ev._id}')">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="delEvent('${ev._id}')">Delete</button>
         </div>
       </div>
     </div>`).join('') || '<p style="color:var(--dim)">No events yet — add one above.</p>';
+}
+function editEvent(id){
+  const ev = (window.EVENTS_CACHE||[]).find(x=>x._id===id);
+  if(!ev) return;
+  openEditModal('Edit Event');
+  const pkgRows = (ev.packages||[]).map(p=>packageRowHtml(p)).join('');
+  document.getElementById('editModalBody').innerHTML = `
+    <div class="field"><label>Title</label><input type="text" id="eeTitle" value="${ev.title||''}"></div>
+    <div class="field"><label>Category</label><input type="text" id="eeCategory" value="${ev.category||''}"></div>
+    <div class="field"><label>Tagline</label><input type="text" id="eeTagline" value="${ev.tagline||''}"></div>
+    <div class="field"><label>Date Label</label><input type="text" id="eeDateLabel" value="${ev.dateLabel||''}"></div>
+    <div class="field"><label>Location</label><input type="text" id="eeLocation" value="${ev.location||''}"></div>
+    <div class="field"><label>Status</label>
+      <select id="eeStatus">
+        <option value="upcoming" ${ev.status==='upcoming'?'selected':''}>Upcoming</option>
+        <option value="past" ${ev.status==='past'?'selected':''}>Past</option>
+        <option value="draft" ${ev.status==='draft'?'selected':''}>Draft</option>
+      </select>
+    </div>
+    <div class="field"><label>Listed on site?</label>
+      <select id="eeListed"><option value="true" ${ev.listed?'selected':''}>Yes</option><option value="false" ${!ev.listed?'selected':''}>No</option></select>
+    </div>
+    <div class="field"><label>Replace Cover Image (optional)</label><input type="file" id="eeImage" accept="image/*"></div>
+    <div class="field"><label>Description</label><textarea id="eeDescription" rows="2">${ev.description||''}</textarea></div>
+    <h4 style="color:var(--gold-l)">Packages</h4>
+    <div id="eePackagesRows">${pkgRows}</div>
+    <button class="btn btn-outline btn-sm" type="button" onclick="document.getElementById('eePackagesRows').insertAdjacentHTML('beforeend', packageRowHtml())">+ Add Package</button>
+    <div class="modal-actions">
+      <button class="btn btn-gold" id="eeSaveBtn">Save Changes</button>
+      <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+    </div>`;
+  document.getElementById('eeSaveBtn').addEventListener('click', async ()=>{
+    const statusEl = document.getElementById('editModalStatus');
+    statusEl.textContent = 'Saving...';
+    const fd = new FormData();
+    fd.append('title', document.getElementById('eeTitle').value);
+    fd.append('category', document.getElementById('eeCategory').value);
+    fd.append('tagline', document.getElementById('eeTagline').value);
+    fd.append('dateLabel', document.getElementById('eeDateLabel').value);
+    fd.append('location', document.getElementById('eeLocation').value);
+    fd.append('status', document.getElementById('eeStatus').value);
+    fd.append('listed', document.getElementById('eeListed').value);
+    fd.append('description', document.getElementById('eeDescription').value);
+    fd.append('packages', JSON.stringify(Array.from(document.querySelectorAll('#eePackagesRows .pkg-row')).map(row=>({
+      name: row.querySelector('.pkg-name').value,
+      price: Number(row.querySelector('.pkg-price').value)||0,
+      passes: Number(row.querySelector('.pkg-passes').value)||1
+    })).filter(p=>p.name)));
+    const fileInput = document.getElementById('eeImage');
+    if(fileInput.files[0]) fd.append('image', fileInput.files[0]);
+    const res = await fetch(`${API}/api/admin/events/${id}`, { method:'PATCH', headers: authHeaders(false), body: fd });
+    const d = await res.json();
+    if(res.ok){ closeEditModal(); loadEventsAdmin(); }
+    else statusEl.textContent = d.error || 'Failed to save';
+  });
 }
 async function toggleEventListed(id, listed){
   const fd = new FormData(); fd.append('listed', listed);
@@ -897,7 +1165,10 @@ async function loadRoles(){
       <td>${r.name}</td>
       <td>${r.label||r.name}</td>
       <td>${(r.permissions||[]).join(', ')||'-'}</td>
-      <td class="row-actions"><button class="btn btn-sm btn-danger" onclick="delRole('${r._id}')">Delete</button></td>
+      <td class="row-actions">
+        <button class="btn btn-sm btn-outline" onclick="editRole('${r._id}')">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="delRole('${r._id}')">Delete</button>
+      </td>
     </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--dim)">No custom roles yet</td></tr>';
 
   // Keep the "Add Employee" role dropdown in sync with available roles.
@@ -906,6 +1177,34 @@ async function loadRoles(){
   uRoleSel.innerHTML = roles.map(r=>`<option value="${r.name}">${r.label||r.name}</option>`).join('')
     + '<option value="admin">Admin (full access)</option>';
   if([...uRoleSel.options].some(o=>o.value===current)) uRoleSel.value = current;
+}
+function editRole(id){
+  const r = ROLES.find(x=>x._id===id);
+  if(!r) return;
+  openEditModal('Edit Role');
+  document.getElementById('editModalBody').innerHTML = `
+    <div class="field"><label>Role Key</label><input type="text" value="${r.name}" disabled></div>
+    <div class="field"><label>Display Label</label><input type="text" id="erLabel" value="${r.label||r.name}"></div>
+    <div class="field">
+      <label>Permissions</label>
+      <div class="checkbox-grid" id="erPermsGrid">${ALL_PERMISSIONS.map(p=>`<label><input type="checkbox" value="${p}" class="er-perm-check" ${(r.permissions||[]).includes(p)?'checked':''}> ${p}</label>`).join('')}</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-gold" id="erSaveBtn">Save Changes</button>
+      <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+    </div>`;
+  document.getElementById('erSaveBtn').addEventListener('click', async ()=>{
+    const statusEl = document.getElementById('editModalStatus');
+    statusEl.textContent = 'Saving...';
+    const payload = {
+      label: document.getElementById('erLabel').value,
+      permissions: Array.from(document.querySelectorAll('.er-perm-check:checked')).map(c=>c.value)
+    };
+    const res = await fetch(`${API}/api/admin/roles/${id}`, { method:'PATCH', headers: authHeaders(), body: JSON.stringify(payload) });
+    const d = await res.json();
+    if(res.ok){ closeEditModal(); loadRoles(); loadUsers(); }
+    else statusEl.textContent = d.error || 'Failed to save';
+  });
 }
 document.getElementById('addRoleBtn').addEventListener('click', async ()=>{
   const statusEl = document.getElementById('roleStatus');
@@ -946,19 +1245,61 @@ async function loadUsers(){
   const res = await fetch(`${API}/api/admin/users`, { headers: authHeaders() });
   if(res.status===401) return;
   const { users } = await res.json();
+  window.USERS_CACHE = users;
   document.getElementById('usersBody').innerHTML = users.map(u => `
     <tr>
-      <td>${u.profileImage ? `<img class="avatar" src="${API}${u.profileImage}">` : `<div class="avatar-placeholder">${(u.name||u.username||'?')[0].toUpperCase()}</div>`}</td>
+      <td>${u.profileImage ? `<img class="avatar" src="${u.profileImage.startsWith('http')?u.profileImage:API+u.profileImage}">` : `<div class="avatar-placeholder">${(u.name||u.username||'?')[0].toUpperCase()}</div>`}</td>
       <td>${u.name||'-'}</td>
       <td>${u.username}</td>
       <td><span class="role-pill">${u.role}</span></td>
       <td>${u.mobile||'-'}</td>
       <td>${u.active ? '🟢 Active' : '⚪ Disabled'}</td>
       <td class="row-actions">
+        <button class="btn btn-sm btn-outline" onclick="editUser('${u._id}')">Edit</button>
         <button class="btn btn-sm btn-outline" onclick="toggleUserActive('${u._id}', ${!u.active})">${u.active?'Disable':'Enable'}</button>
         <button class="btn btn-sm btn-danger" onclick="delUser('${u._id}')">Delete</button>
       </td>
     </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--dim)">No users yet</td></tr>';
+}
+function editUser(id){
+  const u = (window.USERS_CACHE||[]).find(x=>x._id===id);
+  if(!u) return;
+  openEditModal('Edit Employee');
+  const roleOptions = ROLES.map(r=>`<option value="${r.name}" ${u.role===r.name?'selected':''}>${r.label||r.name}</option>`).join('')
+    + `<option value="admin" ${u.role==='admin'?'selected':''}>Admin (full access)</option>`;
+  document.getElementById('editModalBody').innerHTML = `
+    <div class="field"><label>Full Name</label><input type="text" id="euName" value="${u.name||''}"></div>
+    <div class="field"><label>Mobile</label><input type="text" id="euMobile" value="${u.mobile||''}"></div>
+    <div class="field"><label>Email</label><input type="email" id="euEmail" value="${u.email||''}"></div>
+    <div class="field"><label>Role</label><select id="euRole">${roleOptions}</select></div>
+    <div class="field" id="euPermsWrap">
+      <label>Permissions (ignored for Admin role)</label>
+      <div class="checkbox-grid" id="euPermsGrid">${ALL_PERMISSIONS.map(p=>`<label><input type="checkbox" value="${p}" class="eu-perm-check" ${(u.permissions||[]).includes(p)?'checked':''}> ${p}</label>`).join('')}</div>
+    </div>
+    <div class="field"><label>New Password (leave blank to keep current)</label><input type="password" id="euPassword"></div>
+    <div class="field"><label>New Profile Photo (optional)</label><input type="file" id="euProfileImage" accept="image/*"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gold" id="euSaveBtn">Save Changes</button>
+      <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+    </div>`;
+  document.getElementById('euSaveBtn').addEventListener('click', async ()=>{
+    const statusEl = document.getElementById('editModalStatus');
+    statusEl.textContent = 'Saving...';
+    const fd = new FormData();
+    fd.append('name', document.getElementById('euName').value);
+    fd.append('mobile', document.getElementById('euMobile').value);
+    fd.append('email', document.getElementById('euEmail').value);
+    fd.append('role', document.getElementById('euRole').value);
+    fd.append('permissions', JSON.stringify(Array.from(document.querySelectorAll('.eu-perm-check:checked')).map(c=>c.value)));
+    const newPass = document.getElementById('euPassword').value;
+    if(newPass) fd.append('password', newPass);
+    const fileInput = document.getElementById('euProfileImage');
+    if(fileInput.files[0]) fd.append('profileImage', fileInput.files[0]);
+    const res = await fetch(`${API}/api/admin/users/${id}`, { method:'PATCH', headers: authHeaders(false), body: fd });
+    const d = await res.json();
+    if(res.ok){ closeEditModal(); loadUsers(); }
+    else statusEl.textContent = d.error || 'Failed to save';
+  });
 }
 document.getElementById('addUserBtn').addEventListener('click', async ()=>{
   const statusEl = document.getElementById('userStatus');
@@ -998,6 +1339,87 @@ async function delUser(id){
   if(!res.ok){ alert(d.error || 'Failed'); return; }
   loadUsers();
 }
+
+/* ---------- hero section ---------- */
+function heroBadgeRowHtml(val){
+  return `<div class="price-grid" style="grid-template-columns:1fr auto">
+    <input type="text" class="hero-badge-input" placeholder="e.g. 17-18-19 Oct 2026" value="${val||''}">
+    <button class="btn btn-sm btn-danger" type="button" onclick="this.closest('div.price-grid').remove()">✕</button>
+  </div>`;
+}
+document.getElementById('addBadgeRowBtn').addEventListener('click', ()=>{
+  document.getElementById('hBadgesRows').insertAdjacentHTML('beforeend', heroBadgeRowHtml());
+});
+async function loadHero(){
+  const res = await fetch(`${API}/api/admin/hero`, { headers: authHeaders() });
+  if(res.status===401) return;
+  const h = await res.json();
+  document.getElementById('hTitle1').value = h.titleLine1||'';
+  document.getElementById('hTitle2').value = h.titleLine2||'';
+  document.getElementById('hSubtitle').value = h.subtitle||'';
+  document.getElementById('hCtaText').value = h.primaryCtaText||'';
+  document.getElementById('hCtaLink').value = h.primaryCtaLink||'';
+  document.getElementById('hShowWA').value = h.showWhatsappCta===false ? 'false' : 'true';
+  document.getElementById('hBgStyle').value = h.backgroundStyle||'default';
+  document.getElementById('hBadgesRows').innerHTML = (h.dateBadges&&h.dateBadges.length ? h.dateBadges : ['']).map(heroBadgeRowHtml).join('');
+}
+document.getElementById('saveHeroBtn').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('heroStatus');
+  const fd = new FormData();
+  fd.append('titleLine1', document.getElementById('hTitle1').value);
+  fd.append('titleLine2', document.getElementById('hTitle2').value);
+  fd.append('subtitle', document.getElementById('hSubtitle').value);
+  fd.append('primaryCtaText', document.getElementById('hCtaText').value);
+  fd.append('primaryCtaLink', document.getElementById('hCtaLink').value);
+  fd.append('showWhatsappCta', document.getElementById('hShowWA').value);
+  fd.append('backgroundStyle', document.getElementById('hBgStyle').value);
+  fd.append('dateBadges', JSON.stringify(Array.from(document.querySelectorAll('.hero-badge-input')).map(i=>i.value).filter(Boolean)));
+  const fileInput = document.getElementById('hBgImage');
+  if(fileInput.files[0]) fd.append('backgroundImage', fileInput.files[0]);
+  statusEl.textContent = 'Saving...';
+  const res = await fetch(`${API}/api/admin/hero`, { method:'PUT', headers: authHeaders(false), body: fd });
+  const d = await res.json();
+  statusEl.textContent = res.ok ? 'Saved. Live on homepage now.' : (d.error || 'Failed');
+  if(res.ok) fileInput.value='';
+});
+
+/* ---------- my profile ---------- */
+let ME = null;
+async function loadProfile(){
+  const res = await fetch(`${API}/api/admin/me`, { headers: authHeaders() });
+  if(res.status===401) return;
+  ME = await res.json();
+  document.getElementById('profileCard').innerHTML = `
+    ${ME.profileImage ? `<img class="avatar-lg" src="${ME.profileImage.startsWith('http')?ME.profileImage:API+ME.profileImage}">` : `<div class="avatar-lg-placeholder">${(ME.name||ME.username||'?')[0].toUpperCase()}</div>`}
+    <div>
+      <h3 style="margin:0;color:var(--gold-l)">${ME.name||ME.username}</h3>
+      <p style="margin:4px 0;color:var(--dim)">@${ME.username} · <span class="role-pill">${ME.role}</span></p>
+      <p style="margin:4px 0;color:var(--dim);font-size:13px">${ME.email||'No email on file'} · ${ME.mobile||'No mobile on file'}</p>
+      <p style="margin:4px 0;color:var(--dim);font-size:13px">Permissions: ${ME.role==='admin' ? 'Full access' : ((ME.permissions||[]).join(', ')||'None')}</p>
+    </div>`;
+  document.getElementById('pName').value = ME.name||'';
+  document.getElementById('pMobile').value = ME.mobile||'';
+  document.getElementById('pEmail').value = ME.email||'';
+}
+document.getElementById('saveProfileBtn').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('profileStatus');
+  const fd = new FormData();
+  fd.append('name', document.getElementById('pName').value);
+  fd.append('mobile', document.getElementById('pMobile').value);
+  fd.append('email', document.getElementById('pEmail').value);
+  const fileInput = document.getElementById('pProfileImage');
+  if(fileInput.files[0]) fd.append('profileImage', fileInput.files[0]);
+  statusEl.textContent = 'Saving...';
+  const res = await fetch(`${API}/api/admin/me`, { method:'PATCH', headers: authHeaders(false), body: fd });
+  const d = await res.json();
+  if(res.ok){
+    statusEl.textContent = 'Saved.';
+    localStorage.setItem('kp_user', `${d.name || d.username} (${d.role})`);
+    document.getElementById('whoami').textContent = localStorage.getItem('kp_user');
+    fileInput.value=''; loadProfile();
+  } else statusEl.textContent = d.error || 'Failed';
+});
+document.getElementById('profileChangePassBtn').addEventListener('click', ()=> document.getElementById('changePassBtn').click());
 </script>
 </body>
 </html>

@@ -12,6 +12,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{
   --bg:#0a0705;
@@ -211,16 +212,16 @@ footer .fbrand{font-family:'Cormorant Garamond',serif;color:var(--gold-light);fo
 </nav>
 
 <!-- HERO -->
-<section class="hero wrap">
+<section class="hero wrap" id="heroSection">
   <div class="eyebrow">Kritiva Productions Presents</div>
-  <h1 class="display">Royal Garba<br>Nights 2026</h1>
-  <div class="sub">An Evening of Culture, Elegance &amp; Tradition</div>
-  <div class="dates">
+  <h1 class="display" id="heroTitle">Royal Garba<br>Nights 2026</h1>
+  <div class="sub" id="heroSubtitle">An Evening of Culture, Elegance &amp; Tradition</div>
+  <div class="dates" id="heroDates">
     <span>17 · 18 · 19 OCT 2026</span>
     <span>Blue Lotus, Indore</span>
   </div>
   <div class="hero-ctas">
-    <a href="#booking" class="btn btn-gold">Book Your Passes</a>
+    <a href="#booking" id="heroPrimaryCta" class="btn btn-gold">Book Your Passes</a>
     <a id="wa-hero" href="#" target="_blank" class="btn btn-wa">WhatsApp Us</a>
     <a href="tel:+919232532246" class="btn btn-ghost">Call Now</a>
   </div>
@@ -495,13 +496,15 @@ loadEvents();
 const passesRange = document.getElementById('passesRange');
 const passesVal = document.getElementById('passesVal');
 const estimateNum = document.getElementById('estimateNum');
-function updateEstimate(){
-  const p = parseInt(passesRange.value,10);
-  passesVal.textContent = p;
-  estimateNum.textContent = '₹' + (p*5000).toLocaleString('en-IN');
+if(passesRange && passesVal && estimateNum){
+  function updateEstimate(){
+    const p = parseInt(passesRange.value,10);
+    passesVal.textContent = p;
+    estimateNum.textContent = '₹' + (p*5000).toLocaleString('en-IN');
+  }
+  passesRange.addEventListener('input', updateEstimate);
+  updateEstimate();
 }
-passesRange.addEventListener('input', updateEstimate);
-updateEstimate();
 
 /* ===== Booking form submit ===== */
 document.getElementById('bookingForm').addEventListener('submit', async (e)=>{
@@ -523,6 +526,30 @@ document.getElementById('bookingForm').addEventListener('submit', async (e)=>{
     statusEl.textContent = err.message === 'This event is not open for enquiries.' ? err.message : 'Could not submit right now — please WhatsApp or call us directly.';
   }
 });
+
+/* ===== Hero section: admin-managed overrides (falls back to hardcoded defaults above) ===== */
+fetch(`${API_BASE}/api/hero`).then(r=>r.ok?r.json():{}).then(hero=>{
+  if(!hero || !Object.keys(hero).length) return;
+  if(hero.titleLine1 || hero.titleLine2){
+    document.getElementById('heroTitle').innerHTML = `${hero.titleLine1||''}${hero.titleLine1&&hero.titleLine2?'<br>':''}${hero.titleLine2||''}`;
+  }
+  if(hero.subtitle) document.getElementById('heroSubtitle').textContent = hero.subtitle;
+  if(Array.isArray(hero.dateBadges) && hero.dateBadges.length){
+    document.getElementById('heroDates').innerHTML = hero.dateBadges.map(d=>`<span>${d}</span>`).join('');
+  }
+  const primaryCta = document.getElementById('heroPrimaryCta');
+  if(hero.primaryCtaText) primaryCta.textContent = hero.primaryCtaText;
+  if(hero.primaryCtaLink) primaryCta.href = hero.primaryCtaLink;
+  document.getElementById('wa-hero').style.display = hero.showWhatsappCta === false ? 'none' : '';
+  const heroSection = document.getElementById('heroSection');
+  if(hero.backgroundStyle === 'dark') heroSection.style.background = '#050302';
+  else if(hero.backgroundStyle === 'gradient-gold') heroSection.style.background = 'linear-gradient(160deg,#0a0705,#1a1206 60%,#0a0705)';
+  else if(hero.backgroundStyle === 'image' && hero.backgroundImage){
+    heroSection.style.backgroundImage = `linear-gradient(rgba(10,7,5,0.75),rgba(10,7,5,0.85)), url('${hero.backgroundImage}')`;
+    heroSection.style.backgroundSize = 'cover';
+    heroSection.style.backgroundPosition = 'center';
+  }
+}).catch(()=>{});
 
 /* ===== Load active banners for every placement ===== */
 fetch(`${API_BASE}/api/banners/active`).then(r=>r.ok?r.json():{}).then(grouped=>{
@@ -585,8 +612,26 @@ async function updatePriceSummary(){
 document.querySelector('[name="passes"]').addEventListener('input', updatePriceSummary);
 document.getElementById('couponCodeInput').addEventListener('change', updatePriceSummary);
 
-/* ===== QR code (venue location) — simple generated via api ===== */
-document.getElementById('qr').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&color=d4af37&bgcolor=0a0705&data=${encodeURIComponent('https://maps.google.com/?q=Shekhar+Central+Palasia+Indore')}" alt="QR" style="border-radius:8px">`;
+/* ===== QR code (venue location) — generated locally, no external API call ===== */
+(function renderVenueQR(){
+  const mapsUrl = 'https://maps.google.com/?q=Shekhar+Central+Palasia+Indore';
+  const el = document.getElementById('qr');
+  try{
+    if(window.QRCode){
+      new QRCode(el, {
+        text: mapsUrl, width: 160, height: 160,
+        colorDark: '#d4af37', colorLight: '#0a0705',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      const img = el.querySelector('img'); if(img) img.style.borderRadius = '8px';
+    } else {
+      throw new Error('QRCode lib unavailable');
+    }
+  }catch(e){
+    // Fallback so the box is never left empty even if the CDN script failed to load.
+    el.innerHTML = `<a href="${mapsUrl}" target="_blank" rel="noopener" style="color:var(--gold-light);font-size:13px">View venue on Google Maps →</a>`;
+  }
+})();
 
 /* ===== Scroll reveal ===== */
 gsap.registerPlugin(ScrollTrigger);

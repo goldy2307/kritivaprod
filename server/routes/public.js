@@ -4,7 +4,14 @@ const Banner = require('../models/Banner');
 const PriceConfig = require('../models/PriceConfig');
 const Coupon = require('../models/Coupon');
 const Event = require('../models/Event');
+const Hero = require('../models/Hero');
 const { sendMail } = require('../utils/mailer');
+
+/* ---------- Hero section content (public, read-only) ---------- */
+router.get('/hero', async (req, res) => {
+  const hero = await Hero.findOne({ key: 'main' });
+  res.json(hero || {});
+});
 
 /* ---------- Listed events (public) ---------- */
 // Used by the homepage "Upcoming Events" section and the Reserve Now form.
@@ -142,6 +149,20 @@ router.post('/bookings', async (req, res) => {
 });
 
 /* ---------- Active banners, optionally filtered by placement ---------- */
+// b.url is a full Cloudinary URL for anything uploaded post-migration; for
+// legacy local-disk banners (url starts with /uploads/...) we still resolve
+// it to an absolute URL so the frontend <img> tag works from any origin.
+// NOTE: previously this ALWAYS rebuilt the URL from req.protocol/req.get('host'),
+// which silently downgraded https banners to http behind a reverse proxy that
+// doesn't forward X-Forwarded-Proto — the browser then blocked them as mixed
+// content and they simply never rendered. Cloudinary URLs are already
+// absolute+https, so we now pass them through untouched.
+function resolveBannerUrl(req, url) {
+  if (!url) return url;
+  if (url.startsWith('/uploads/')) return `${req.protocol}://${req.get('host')}${url}`;
+  return url;
+}
+
 router.get('/banners/active', async (req, res) => {
   const { placement } = req.query;
   const filter = { active: true };
@@ -152,13 +173,13 @@ router.get('/banners/active', async (req, res) => {
     const grouped = {};
     banners.forEach(b => {
       grouped[b.placement] = grouped[b.placement] || [];
-      grouped[b.placement].push({ url: `${req.protocol}://${req.get('host')}${b.url}`, title: b.title, linkUrl: b.linkUrl });
+      grouped[b.placement].push({ url: resolveBannerUrl(req, b.url), title: b.title, linkUrl: b.linkUrl });
     });
     return res.json(grouped);
   }
   const banner = banners[0];
   if (!banner) return res.status(404).json({});
-  res.json({ url: `${req.protocol}://${req.get('host')}${banner.url}`, title: banner.title, linkUrl: banner.linkUrl });
+  res.json({ url: resolveBannerUrl(req, banner.url), title: banner.title, linkUrl: banner.linkUrl });
 });
 
 module.exports = router;

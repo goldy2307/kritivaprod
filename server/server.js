@@ -7,6 +7,8 @@ const fs = require('fs');
 
 const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');
+const { verifyMailer } = require('./utils/mailer');
+const { CLOUDINARY_ENABLED } = require('./utils/cloudinary');
 
 // Defensive: make sure upload dirs exist even if git/deploy dropped empty folders.
 ['banners', 'invoices', 'profiles', 'events'].forEach(dir => {
@@ -56,6 +58,11 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('MongoDB connected');
     app.listen(PORT, () => console.log(`Kritiva server running on port ${PORT}`));
+
+    console.log(CLOUDINARY_ENABLED ? 'Cloudinary: configured' : 'Cloudinary: NOT configured (image uploads will fall back to local disk and may not survive redeploys)');
+    verifyMailer()
+      .then(() => console.log('SMTP: connection verified, mail should send fine'))
+      .catch(err => console.error('SMTP: verification FAILED —', err.message, '(this is almost certainly why invoice/booking emails are not sending — check SMTP_HOST/PORT/SECURE/USER/PASS in .env)'));
   })
   .catch(err => {
     console.error('MongoDB connection error:', err.message);

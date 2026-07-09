@@ -1,7 +1,6 @@
 const router = require('express').Router();
 const path = require('path');
 const fs = require('fs');
-const multer = require('multer');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
@@ -12,10 +11,12 @@ const PriceConfig = require('../models/PriceConfig');
 const Coupon = require('../models/Coupon');
 const Event = require('../models/Event');
 const Role = require('../models/Role');
+const Hero = require('../models/Hero');
 const { requireAuth, requirePermission } = require('../middleware/auth');
-const { sendMail } = require('../utils/mailer');
+const { sendMail, verifyMailer } = require('../utils/mailer');
 const { generateInvoicePDF } = require('../utils/invoice');
 const { generateCaptcha, verifyCaptcha } = require('../utils/captcha');
+const { uploadBufferToCloudinary, deleteFromCloudinary, memoryUpload, CLOUDINARY_ENABLED } = require('../utils/cloudinary');
 
 const FIXED_RESET_EMAIL = 'kritivaproductions@gmail.com'; // OTP always goes here, never to the requesting user's own inbox.
 
@@ -157,11 +158,25 @@ router.post('/bookings', requireAuth, requirePermission('bookings'), async (req,
   res.status(201).json(booking);
 });
 
+router.get('/bookings/:id', requireAuth, requirePermission('bookings'), async (req, res) => {
+  const booking = await Booking.findById(req.params.id);
+  if (!booking) return res.status(404).json({ error: 'Not found' });
+  res.json(booking);
+});
+
 router.patch('/bookings/:id', requireAuth, requirePermission('bookings'), async (req, res) => {
-  const { status, amount } = req.body;
+  const { status, paymentStatus, amount, name, phone, email, planType, passes, day, message } = req.body;
   const update = {};
   if (status) update.status = status;
+  if (paymentStatus) update.paymentStatus = paymentStatus;
   if (amount !== undefined) { update.amount = amount; update.amountIsManualOverride = true; }
+  if (name !== undefined) update.name = name;
+  if (phone !== undefined) update.phone = phone;
+  if (email !== undefined) update.email = email;
+  if (planType !== undefined) update.planType = planType;
+  if (passes !== undefined) update.passes = Number(passes) || 1;
+  if (day !== undefined) update.day = day;
+  if (message !== undefined) update.message = message;
   const booking = await Booking.findByIdAndUpdate(req.params.id, update, { new: true });
   if (!booking) return res.status(404).json({ error: 'Not found' });
   res.json(booking);
@@ -185,6 +200,7 @@ router.post('/bookings/:id/invoice', requireAuth, requirePermission('bookings'),
     await booking.save();
 
     let emailed = false;
+    let mailError = null;
     if (booking.email && req.body.sendEmail) {
       try {
         await sendMail({
@@ -201,13 +217,54 @@ router.post('/bookings/:id/invoice', requireAuth, requirePermission('bookings'),
         emailed = true;
       } catch (mailErr) {
         console.error('MAIL ERROR (invoice):', mailErr.message);
+        mailError = mailErr.message; // surfaced to admin UI below instead of swallowed
       }
     }
 
-    res.json({ ok: true, invoiceNumber, downloadUrl: `/uploads/invoices/${filename}`, emailed });
+    res.json({ ok: true, invoiceNumber, downloadUrl: `/uploads/invoices/${filename}`, emailed, mailError });
   } catch (err) {
     console.error('INVOICE ERROR:', err);
     res.status(500).json({ error: 'Failed to generate invoice' });
+  }
+});
+
+/* ---------- Re-mail an already-generated invoice (no regeneration/amount prompt) ---------- */
+router.post('/bookings/:id/invoice/mail', requireAuth, requirePermission('bookings'), async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ error: 'Not found' });
+    if (!booking.email) return res.status(400).json({ error: 'This booking has no email on file' });
+    if (!booking.invoiceNumber) return res.status(400).json({ error: 'No invoice generated yet — generate one first' });
+
+    const filename = `${booking.invoiceNumber}.pdf`;
+    const filePath = path.join(__dirname, '..', 'uploads', 'invoices', filename);
+    if (!fs.existsSync(filePath)) return res.status(400).json({ error: 'Invoice PDF missing on server — regenerate it' });
+
+    await sendMail({
+      to: booking.email,
+      subject: `Your Invoice — ${booking.invoiceNumber}${booking.eventTitle ? ` | ${booking.eventTitle}` : ''}`,
+      heading: 'Invoice Attached',
+      bodyLines: [
+        `Dear ${booking.name},`,
+        `Please find attached your invoice <b>${booking.invoiceNumber}</b> for ${booking.planType}${booking.eventTitle ? ` — ${booking.eventTitle}` : ''}.`,
+        `We look forward to celebrating with you.`
+      ],
+      attachments: [{ filename, path: filePath }]
+    });
+    res.json({ ok: true, emailed: true });
+  } catch (err) {
+    console.error('MAIL ERROR (invoice re-send):', err.message);
+    res.status(500).json({ error: err.message || 'Failed to send email' });
+  }
+});
+
+/* ---------- SMTP diagnostic: verifies connection without sending anything ---------- */
+router.get('/mail/test', requireAuth, requirePermission('mail'), async (req, res) => {
+  try {
+    await verifyMailer();
+    res.json({ ok: true, message: 'SMTP connection verified successfully.' });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
@@ -283,15 +340,7 @@ router.delete('/coupons/:id', requireAuth, requirePermission('coupons'), async (
 /* ================= EVENTS ================= */
 // Powers the homepage "Upcoming Events" section and gates Reserve Now: only
 // events created here (and listed=true) can be enquired about on the site.
-const eventStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '..', 'uploads', 'events');
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`)
-});
-const uploadEventImage = multer({ storage: eventStorage, limits: { fileSize: 5 * 1024 * 1024 } });
+const uploadEventImage = memoryUpload(5);
 
 router.get('/events', requireAuth, requirePermission('events'), async (req, res) => {
   const events = await Event.find().sort({ order: 1, createdAt: -1 });
@@ -302,6 +351,12 @@ router.post('/events', requireAuth, requirePermission('events'), uploadEventImag
   try {
     let packages = [];
     try { packages = JSON.parse(req.body.packages || '[]'); } catch (_) {}
+    let image, imageCloudinaryId;
+    if (req.file) {
+      const uploaded = await uploadBufferToCloudinary(req.file.buffer, 'events');
+      image = uploaded.secure_url;
+      imageCloudinaryId = uploaded.public_id;
+    }
     const event = await Event.create({
       title: req.body.title,
       category: req.body.category || 'General',
@@ -311,7 +366,7 @@ router.post('/events', requireAuth, requirePermission('events'), uploadEventImag
       startDate: req.body.startDate || undefined,
       endDate: req.body.endDate || undefined,
       location: req.body.location,
-      image: req.file ? `/uploads/events/${req.file.filename}` : undefined,
+      image, imageCloudinaryId,
       packages,
       status: req.body.status || 'upcoming',
       listed: req.body.listed !== undefined ? (req.body.listed === 'true' || req.body.listed === true) : true,
@@ -320,12 +375,15 @@ router.post('/events', requireAuth, requirePermission('events'), uploadEventImag
     res.status(201).json(event);
   } catch (err) {
     console.error('EVENT CREATE ERROR:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: err.message || 'Server error' });
   }
 });
 
 router.patch('/events/:id', requireAuth, requirePermission('events'), uploadEventImage.single('image'), async (req, res) => {
   try {
+    const existing = await Event.findById(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Not found' });
+
     const update = {};
     ['title', 'category', 'tagline', 'description', 'dateLabel', 'location', 'status'].forEach(f => {
       if (req.body[f] !== undefined) update[f] = req.body[f];
@@ -337,22 +395,28 @@ router.patch('/events/:id', requireAuth, requirePermission('events'), uploadEven
     if (req.body.packages !== undefined) {
       try { update.packages = JSON.parse(req.body.packages); } catch (_) {}
     }
-    if (req.file) update.image = `/uploads/events/${req.file.filename}`;
+    if (req.file) {
+      const uploaded = await uploadBufferToCloudinary(req.file.buffer, 'events');
+      update.image = uploaded.secure_url;
+      update.imageCloudinaryId = uploaded.public_id;
+      if (existing.imageCloudinaryId) deleteFromCloudinary(existing.imageCloudinaryId);
+    }
 
     const event = await Event.findByIdAndUpdate(req.params.id, update, { new: true });
-    if (!event) return res.status(404).json({ error: 'Not found' });
     res.json(event);
   } catch (err) {
     console.error('EVENT UPDATE ERROR:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: err.message || 'Server error' });
   }
 });
 
 router.delete('/events/:id', requireAuth, requirePermission('events'), async (req, res) => {
   const event = await Event.findByIdAndDelete(req.params.id);
-  if (event && event.image) {
-    const filePath = path.join(__dirname, '..', event.image);
-    fs.unlink(filePath, () => {});
+  if (event) {
+    if (event.imageCloudinaryId) deleteFromCloudinary(event.imageCloudinaryId);
+    else if (event.image && event.image.startsWith('/uploads/')) {
+      fs.unlink(path.join(__dirname, '..', event.image), () => {});
+    }
   }
   res.json({ ok: true });
 });
@@ -414,20 +478,12 @@ router.post('/send-mail', requireAuth, requirePermission('mail'), async (req, re
     res.json({ ok: true });
   } catch (err) {
     console.error('MAIL ERROR (custom):', err.message);
-    res.status(500).json({ error: 'Failed to send email' });
+    res.status(500).json({ error: err.message || 'Failed to send email' });
   }
 });
 
 /* ================= BANNERS ================= */
-const bannerStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '..', 'uploads', 'banners');
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`)
-});
-const uploadBanner = multer({ storage: bannerStorage, limits: { fileSize: 5 * 1024 * 1024 } });
+const uploadBanner = memoryUpload(5);
 
 router.get('/banners', requireAuth, requirePermission('banners'), async (req, res) => {
   const banners = await Banner.find().sort({ createdAt: -1 });
@@ -435,15 +491,46 @@ router.get('/banners', requireAuth, requirePermission('banners'), async (req, re
 });
 
 router.post('/banners', requireAuth, requirePermission('banners'), uploadBanner.single('banner'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const banner = await Banner.create({
-    title: req.body.title || '',
-    url: `/uploads/banners/${req.file.filename}`,
-    placement: req.body.placement || 'promo-section',
-    linkUrl: req.body.linkUrl || '',
-    active: false
-  });
-  res.status(201).json(banner);
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const uploaded = await uploadBufferToCloudinary(req.file.buffer, 'banners');
+    const banner = await Banner.create({
+      title: req.body.title || '',
+      url: uploaded.secure_url,
+      cloudinaryId: uploaded.public_id,
+      placement: req.body.placement || 'promo-section',
+      linkUrl: req.body.linkUrl || '',
+      active: false
+    });
+    res.status(201).json(banner);
+  } catch (err) {
+    console.error('BANNER UPLOAD ERROR:', err);
+    res.status(500).json({ error: err.message || 'Upload failed' });
+  }
+});
+
+/* Edit a banner's details, and optionally swap its image. */
+router.patch('/banners/:id', requireAuth, requirePermission('banners'), uploadBanner.single('banner'), async (req, res) => {
+  try {
+    const existing = await Banner.findById(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Not found' });
+
+    const update = {};
+    if (req.body.title !== undefined) update.title = req.body.title;
+    if (req.body.linkUrl !== undefined) update.linkUrl = req.body.linkUrl;
+    if (req.body.placement !== undefined) update.placement = req.body.placement;
+    if (req.file) {
+      const uploaded = await uploadBufferToCloudinary(req.file.buffer, 'banners');
+      update.url = uploaded.secure_url;
+      update.cloudinaryId = uploaded.public_id;
+      if (existing.cloudinaryId) deleteFromCloudinary(existing.cloudinaryId);
+    }
+    const banner = await Banner.findByIdAndUpdate(req.params.id, update, { new: true });
+    res.json(banner);
+  } catch (err) {
+    console.error('BANNER UPDATE ERROR:', err);
+    res.status(500).json({ error: err.message || 'Server error' });
+  }
 });
 
 router.patch('/banners/:id/activate', requireAuth, requirePermission('banners'), async (req, res) => {
@@ -463,22 +550,49 @@ router.patch('/banners/:id/deactivate', requireAuth, requirePermission('banners'
 router.delete('/banners/:id', requireAuth, requirePermission('banners'), async (req, res) => {
   const banner = await Banner.findByIdAndDelete(req.params.id);
   if (banner) {
-    const filePath = path.join(__dirname, '..', banner.url);
-    fs.unlink(filePath, () => {});
+    if (banner.cloudinaryId) deleteFromCloudinary(banner.cloudinaryId);
+    else if (banner.url && banner.url.startsWith('/uploads/')) {
+      fs.unlink(path.join(__dirname, '..', banner.url), () => {});
+    }
   }
   res.json({ ok: true });
 });
 
 /* ================= USERS / EMPLOYEES ================= */
-const profileStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '..', 'uploads', 'profiles');
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`)
+const uploadProfile = memoryUpload(3);
+
+/* ---- Logged-in admin's own profile (used by the "My Profile" screen) ---- */
+router.get('/me', requireAuth, async (req, res) => {
+  const admin = await Admin.findById(req.admin.id).select('-passwordHash -resetOtpHash');
+  if (!admin) return res.status(404).json({ error: 'Not found' });
+  res.json(admin);
 });
-const uploadProfile = multer({ storage: profileStorage, limits: { fileSize: 3 * 1024 * 1024 } });
+
+router.patch('/me', requireAuth, uploadProfile.single('profileImage'), async (req, res) => {
+  try {
+    const { name, mobile, email } = req.body;
+    const update = {};
+    if (name !== undefined) update.name = name;
+    if (mobile !== undefined) update.mobile = mobile;
+    if (email !== undefined) update.email = email;
+
+    const existing = await Admin.findById(req.admin.id);
+    if (!existing) return res.status(404).json({ error: 'Not found' });
+
+    if (req.file) {
+      const uploaded = await uploadBufferToCloudinary(req.file.buffer, 'profiles');
+      update.profileImage = uploaded.secure_url;
+      update.profileImageCloudinaryId = uploaded.public_id;
+      if (existing.profileImageCloudinaryId) deleteFromCloudinary(existing.profileImageCloudinaryId);
+    }
+
+    const admin = await Admin.findByIdAndUpdate(req.admin.id, update, { new: true }).select('-passwordHash -resetOtpHash');
+    res.json(admin);
+  } catch (err) {
+    console.error('PROFILE UPDATE ERROR:', err);
+    res.status(500).json({ error: err.message || 'Server error' });
+  }
+});
 
 router.get('/users', requireAuth, requirePermission('users'), async (req, res) => {
   const users = await Admin.find().select('-passwordHash -resetOtpHash').sort({ createdAt: -1 });
@@ -496,12 +610,18 @@ router.post('/users', requireAuth, requirePermission('users'), uploadProfile.sin
       const roleDoc = await Role.findOne({ name: finalRole });
       if (!roleDoc) return res.status(400).json({ error: `Unknown role "${finalRole}". Create it under Manage Roles first.` });
     }
+    let profileImage, profileImageCloudinaryId;
+    if (req.file) {
+      const uploaded = await uploadBufferToCloudinary(req.file.buffer, 'profiles');
+      profileImage = uploaded.secure_url;
+      profileImageCloudinaryId = uploaded.public_id;
+    }
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await Admin.create({
       name, username, mobile, email, passwordHash,
       role: finalRole,
       permissions: finalRole === 'admin' ? [] : permissions,
-      profileImage: req.file ? `/uploads/profiles/${req.file.filename}` : undefined
+      profileImage, profileImageCloudinaryId
     });
     const safe = user.toObject();
     delete safe.passwordHash;
@@ -509,39 +629,86 @@ router.post('/users', requireAuth, requirePermission('users'), uploadProfile.sin
   } catch (err) {
     if (err.code === 11000) return res.status(409).json({ error: 'Username already exists' });
     console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: err.message || 'Server error' });
   }
 });
 
 router.patch('/users/:id', requireAuth, requirePermission('users'), uploadProfile.single('profileImage'), async (req, res) => {
-  const { name, mobile, email, role, active, password } = req.body;
-  const update = {};
-  if (name !== undefined) update.name = name;
-  if (mobile !== undefined) update.mobile = mobile;
-  if (email !== undefined) update.email = email;
-  if (active !== undefined) update.active = active === 'true' || active === true;
-  if (role) {
-    if (role !== 'admin') {
-      const roleDoc = await Role.findOne({ name: role });
-      if (!roleDoc) return res.status(400).json({ error: `Unknown role "${role}". Create it under Manage Roles first.` });
-    }
-    update.role = role;
-  }
-  if (req.body.permissions !== undefined) {
-    try { update.permissions = JSON.parse(req.body.permissions); } catch (_) {}
-  }
-  if (req.file) update.profileImage = `/uploads/profiles/${req.file.filename}`;
-  if (password) update.passwordHash = await bcrypt.hash(password, 10);
+  try {
+    const { name, mobile, email, role, active, password } = req.body;
+    const existing = await Admin.findById(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Not found' });
 
-  const user = await Admin.findByIdAndUpdate(req.params.id, update, { new: true }).select('-passwordHash -resetOtpHash');
-  if (!user) return res.status(404).json({ error: 'Not found' });
-  res.json(user);
+    const update = {};
+    if (name !== undefined) update.name = name;
+    if (mobile !== undefined) update.mobile = mobile;
+    if (email !== undefined) update.email = email;
+    if (active !== undefined) update.active = active === 'true' || active === true;
+    if (role) {
+      if (role !== 'admin') {
+        const roleDoc = await Role.findOne({ name: role });
+        if (!roleDoc) return res.status(400).json({ error: `Unknown role "${role}". Create it under Manage Roles first.` });
+      }
+      update.role = role;
+    }
+    if (req.body.permissions !== undefined) {
+      try { update.permissions = JSON.parse(req.body.permissions); } catch (_) {}
+    }
+    if (req.file) {
+      const uploaded = await uploadBufferToCloudinary(req.file.buffer, 'profiles');
+      update.profileImage = uploaded.secure_url;
+      update.profileImageCloudinaryId = uploaded.public_id;
+      if (existing.profileImageCloudinaryId) deleteFromCloudinary(existing.profileImageCloudinaryId);
+    }
+    if (password) update.passwordHash = await bcrypt.hash(password, 10);
+
+    const user = await Admin.findByIdAndUpdate(req.params.id, update, { new: true }).select('-passwordHash -resetOtpHash');
+    res.json(user);
+  } catch (err) {
+    console.error('USER UPDATE ERROR:', err);
+    res.status(500).json({ error: err.message || 'Server error' });
+  }
 });
 
 router.delete('/users/:id', requireAuth, requirePermission('users'), async (req, res) => {
   if (req.admin.id === req.params.id) return res.status(400).json({ error: "Can't delete your own account while logged in" });
-  await Admin.findByIdAndDelete(req.params.id);
+  const user = await Admin.findByIdAndDelete(req.params.id);
+  if (user && user.profileImageCloudinaryId) deleteFromCloudinary(user.profileImageCloudinaryId);
   res.json({ ok: true });
+});
+
+/* ================= HERO SECTION ================= */
+const uploadHeroImage = memoryUpload(5);
+
+router.get('/hero', requireAuth, requirePermission('banners'), async (req, res) => {
+  let hero = await Hero.findOne({ key: 'main' });
+  if (!hero) hero = await Hero.create({ key: 'main' });
+  res.json(hero);
+});
+
+router.put('/hero', requireAuth, requirePermission('banners'), uploadHeroImage.single('backgroundImage'), async (req, res) => {
+  try {
+    const existing = await Hero.findOne({ key: 'main' });
+    const update = { updatedAt: new Date() };
+    ['titleLine1', 'titleLine2', 'subtitle', 'primaryCtaText', 'primaryCtaLink', 'backgroundStyle'].forEach(f => {
+      if (req.body[f] !== undefined) update[f] = req.body[f];
+    });
+    if (req.body.showWhatsappCta !== undefined) update.showWhatsappCta = req.body.showWhatsappCta === 'true' || req.body.showWhatsappCta === true;
+    if (req.body.dateBadges !== undefined) {
+      try { update.dateBadges = JSON.parse(req.body.dateBadges); } catch (_) { update.dateBadges = []; }
+    }
+    if (req.file) {
+      const uploaded = await uploadBufferToCloudinary(req.file.buffer, 'hero');
+      update.backgroundImage = uploaded.secure_url;
+      update.backgroundImageCloudinaryId = uploaded.public_id;
+      if (existing && existing.backgroundImageCloudinaryId) deleteFromCloudinary(existing.backgroundImageCloudinaryId);
+    }
+    const hero = await Hero.findOneAndUpdate({ key: 'main' }, update, { new: true, upsert: true });
+    res.json(hero);
+  } catch (err) {
+    console.error('HERO UPDATE ERROR:', err);
+    res.status(500).json({ error: err.message || 'Server error' });
+  }
 });
 
 module.exports = router;
